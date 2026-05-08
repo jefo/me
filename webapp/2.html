@@ -1,0 +1,2324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CS-001 — PCBO v2: Hardware Architect · Alex Mercer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0f1115;
+        --surface: #171b22;
+        --surface2: #1b2028;
+        --surface3: #1f2530;
+        --border: #252b35;
+        --border2: #2e3540;
+        --text: #e6eaf0;
+        --text2: #9aa4b2;
+        --text3: #6b7280;
+        --accent: #2dd4bf;
+        --accent-dim: #1a4a44;
+        --amber: #ef9f27;
+        --amber-dim: #2a2010;
+        --green: #5dcaa5;
+        --green-dim: #0f2a1a;
+        --red: #f09595;
+        --red-dim: #2a1010;
+        --mono: "IBM Plex Mono", monospace;
+        --sans: "IBM Plex Sans", system-ui, sans-serif;
+        --rail: 240px;
+      }
+
+      html {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 15px;
+        line-height: 1.7;
+        scroll-behavior: smooth;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      a:hover {
+        color: var(--accent);
+      }
+      ::selection {
+        background: var(--accent-dim);
+        color: var(--accent);
+      }
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 2px;
+      }
+
+      /* LAYOUT */
+      .layout {
+        display: flex;
+        min-height: 100vh;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      /* RAIL */
+      .rail {
+        width: var(--rail);
+        flex-shrink: 0;
+        padding: 40px 28px;
+        border-right: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+      }
+      .rail-back {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.15s;
+        letter-spacing: 0.04em;
+      }
+      .rail-back:hover {
+        color: var(--accent);
+      }
+      .rail-divider {
+        height: 1px;
+        background: var(--border);
+      }
+      .rail-id {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text3);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .rail-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text);
+        margin-top: 6px;
+        line-height: 1.4;
+      }
+      .rail-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        margin-top: 8px;
+      }
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        flex-shrink: 0;
+        animation: pulse 3s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      .toc {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .toc-label {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text3);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      .toc a {
+        font-size: 12px;
+        color: var(--text3);
+        padding: 4px 8px;
+        border-radius: 3px;
+        transition:
+          color 0.15s,
+          background 0.15s;
+      }
+      .toc a:hover {
+        color: var(--text);
+        background: var(--surface);
+      }
+      .toc a.active {
+        color: var(--accent);
+      }
+
+      .rail-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .meta-row {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .meta-key {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text3);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .meta-val {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text2);
+      }
+
+      .rail-links {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .rail-links a {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        padding: 4px 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.15s;
+      }
+      .rail-links a::before {
+        content: "↗";
+        opacity: 0.5;
+        font-size: 10px;
+      }
+      .rail-links a:hover {
+        color: var(--accent);
+      }
+
+      /* MAIN */
+      .main {
+        flex: 1;
+        padding: 0 64px;
+        max-width: 900px;
+      }
+
+      /* HEADER */
+      .cs-header {
+        padding: 64px 0 56px;
+        border-bottom: 1px solid var(--border);
+      }
+      .cs-breadcrumb {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        letter-spacing: 0.08em;
+        margin-bottom: 20px;
+      }
+      .cs-breadcrumb span {
+        color: var(--text3);
+        margin: 0 6px;
+      }
+      .cs-id-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .cs-id {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--accent);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .cs-badge {
+        font-family: var(--mono);
+        font-size: 9px;
+        padding: 3px 9px;
+        border-radius: 2px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .badge-complete {
+        background: var(--green-dim);
+        color: var(--green);
+      }
+      .badge-solo {
+        background: var(--surface2);
+        color: var(--text3);
+        border: 1px solid var(--border2);
+      }
+      .cs-title {
+        font-size: 28px;
+        font-weight: 300;
+        line-height: 1.25;
+        color: var(--text);
+        letter-spacing: -0.02em;
+        margin-bottom: 24px;
+        max-width: 720px;
+      }
+
+      .cs-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .chip {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text3);
+        border: 1px solid var(--border2);
+        padding: 3px 9px;
+        border-radius: 2px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .chip-accent {
+        border-color: var(--accent-dim);
+        color: var(--accent);
+      }
+
+      /* EXECUTIVE SUMMARY */
+      .exec-summary {
+        margin: 48px 0;
+        padding: 28px 32px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--accent);
+        border-radius: 0 6px 6px 0;
+      }
+      .exec-label {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--accent);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+      }
+      .exec-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px 32px;
+      }
+      .exec-item {
+      }
+      .exec-key {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text3);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .exec-val {
+        font-size: 13px;
+        color: var(--text2);
+        line-height: 1.5;
+      }
+
+      /* SECTIONS */
+      .cs-section {
+        padding: 48px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .cs-section:last-child {
+        border-bottom: none;
+      }
+      .section-label {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text3);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .section-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+      .section-h {
+        font-size: 18px;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 16px;
+        line-height: 1.3;
+      }
+      .section-p {
+        font-size: 14px;
+        color: var(--text2);
+        line-height: 1.8;
+        margin-bottom: 16px;
+      }
+      .section-p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* CONSTRAINT LIST */
+      .constraint-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .constraint-item {
+        background: var(--surface);
+        padding: 14px 20px;
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        font-size: 13px;
+        color: var(--text2);
+        transition: background 0.15s;
+      }
+      .constraint-item:hover {
+        background: var(--surface2);
+      }
+      .constraint-num {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        width: 20px;
+        flex-shrink: 0;
+      }
+      .constraint-text strong {
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      /* DIAGRAM PLACEHOLDER */
+      .diagram-placeholder {
+        background: var(--surface);
+        border: 1px dashed var(--border2);
+        border-radius: 6px;
+        padding: 48px 32px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        min-height: 220px;
+        text-align: center;
+      }
+      .diagram-placeholder-label {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--accent);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .diagram-placeholder-title {
+        font-size: 14px;
+        color: var(--text2);
+      }
+      .diagram-placeholder-sub {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+      }
+      .diagram-placeholder-flow {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        margin-top: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0;
+      }
+      .flow-node {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        border: 1px solid var(--border2);
+        padding: 6px 14px;
+        border-radius: 3px;
+        background: var(--surface2);
+      }
+      .flow-node.accent {
+        border-color: var(--accent-dim);
+        color: var(--accent);
+      }
+      .flow-arrow {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--border2);
+        padding: 0 6px;
+      }
+
+      /* TOGGLE CONTROL */
+      .toggle-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .toggle-label-text {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text3);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .toggle-group {
+        display: flex;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .toggle-btn {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        padding: 6px 14px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        transition:
+          color 0.15s,
+          background 0.15s;
+      }
+      .toggle-btn.on {
+        background: var(--surface2);
+        color: var(--accent);
+      }
+      .toggle-btn:hover:not(.on) {
+        color: var(--text2);
+      }
+
+      /* TERMINAL VIEW */
+      .terminal-block {
+        background: #0a0d11;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .terminal-topbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+      }
+      .term-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .term-dot-r {
+        background: #3a2020;
+      }
+      .term-dot-y {
+        background: #3a3020;
+      }
+      .term-dot-g {
+        background: #1a3020;
+      }
+      .terminal-filename {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        margin-left: 8px;
+      }
+      .terminal-body {
+        padding: 24px 28px;
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.9;
+        overflow-x: auto;
+      }
+      .t-comment {
+        color: var(--text3);
+      }
+      .t-key {
+        color: var(--accent);
+      }
+      .t-val {
+        color: var(--text2);
+      }
+      .t-reject {
+        color: var(--red);
+      }
+      .t-pass {
+        color: var(--green);
+      }
+      .t-warn {
+        color: var(--amber);
+      }
+      .t-section {
+        color: var(--text);
+        font-weight: 500;
+        display: block;
+        margin-top: 8px;
+      }
+      .t-indent {
+        display: block;
+        padding-left: 20px;
+      }
+      .t-indent2 {
+        display: block;
+        padding-left: 40px;
+      }
+
+      /* CARDS VIEW */
+      .artifact-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .artifact-card {
+        background: var(--surface);
+        padding: 20px 24px;
+      }
+      .ac-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+      }
+      .ac-field {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .ac-result {
+        font-family: var(--mono);
+        font-size: 9px;
+        padding: 3px 9px;
+        border-radius: 2px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .ac-pass {
+        background: var(--green-dim);
+        color: var(--green);
+      }
+      .ac-fail {
+        background: var(--red-dim);
+        color: var(--red);
+      }
+      .ac-warn {
+        background: var(--amber-dim);
+        color: var(--amber);
+      }
+      .ac-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .ac-rationale {
+        font-size: 12px;
+        color: var(--text2);
+        line-height: 1.65;
+        margin-bottom: 12px;
+      }
+      .ac-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .ac-chip {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text3);
+        border: 1px solid var(--border2);
+        padding: 2px 8px;
+        border-radius: 2px;
+      }
+      .ac-chip-reject {
+        border-color: var(--red-dim);
+        color: var(--red);
+      }
+      .ac-chip-risk {
+        border-color: var(--amber-dim);
+        color: var(--amber);
+      }
+
+      /* BENCHMARK TABLE */
+      .bench-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .bench-table thead tr {
+        border-bottom: 1px solid var(--border2);
+      }
+      .bench-table th {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text3);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 10px 16px;
+        text-align: left;
+        font-weight: 400;
+      }
+      .bench-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text2);
+      }
+      .bench-table tr:last-child td {
+        border-bottom: none;
+      }
+      .bench-table tr.highlight td {
+        background: var(--surface2);
+        color: var(--text);
+      }
+      .bench-table tr.highlight td:first-child {
+        border-left: 2px solid var(--accent);
+      }
+      .score-cell {
+        font-family: var(--mono);
+        font-weight: 500;
+      }
+      .score-hi {
+        color: var(--accent);
+      }
+      .score-mid {
+        color: var(--amber);
+      }
+      .score-lo {
+        color: var(--red);
+      }
+      .bench-note {
+        font-size: 12px;
+        color: var(--text3);
+      }
+
+      /* SCORE CARDS */
+      .score-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .score-card {
+        background: var(--surface);
+        padding: 24px 28px;
+      }
+      .score-card.featured {
+        background: var(--surface2);
+        border-left: 2px solid var(--accent);
+      }
+      .sc-system {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+      .sc-type {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text3);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+      }
+      .sc-score-row {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+      .sc-score {
+        font-family: var(--mono);
+        font-size: 28px;
+        font-weight: 500;
+        line-height: 1;
+      }
+      .sc-score-total {
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--text3);
+      }
+      .sc-bar-wrap {
+        background: var(--border);
+        border-radius: 2px;
+        height: 3px;
+        margin-bottom: 16px;
+        overflow: hidden;
+      }
+      .sc-bar {
+        height: 100%;
+        border-radius: 2px;
+        transition: width 0.6s ease;
+      }
+      .sc-note {
+        font-size: 12px;
+        color: var(--text3);
+        line-height: 1.5;
+      }
+
+      /* LESSONS */
+      .lessons-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .lesson-item {
+        background: var(--surface);
+        padding: 24px 28px;
+        display: grid;
+        grid-template-columns: 60px 1fr;
+        gap: 20px;
+        align-items: start;
+        transition: background 0.15s;
+      }
+      .lesson-item:hover {
+        background: var(--surface2);
+      }
+      .lesson-num {
+        font-family: var(--mono);
+        font-size: 22px;
+        font-weight: 500;
+        color: var(--border2);
+        line-height: 1;
+        padding-top: 3px;
+      }
+      .lesson-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .lesson-body {
+        font-size: 13px;
+        color: var(--text2);
+        line-height: 1.7;
+      }
+
+      /* REPLICABILITY */
+      .replicate-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+        margin-bottom: 24px;
+      }
+      .replicate-item {
+        background: var(--surface);
+        padding: 20px 24px;
+        transition: background 0.15s;
+      }
+      .replicate-item:hover {
+        background: var(--surface2);
+      }
+      .ri-domain {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--accent);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      .ri-desc {
+        font-size: 13px;
+        color: var(--text2);
+        line-height: 1.6;
+      }
+
+      /* FOOTER */
+      .cs-footer {
+        padding: 40px 64px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .footer-left {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+      }
+      .footer-links {
+        display: flex;
+        gap: 24px;
+      }
+      .footer-links a {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        transition: color 0.15s;
+      }
+      .footer-links a:hover {
+        color: var(--accent);
+      }
+
+      /* MOBILE */
+      @media (max-width: 900px) {
+        .layout {
+          flex-direction: column;
+        }
+        .rail {
+          width: 100%;
+          height: auto;
+          position: relative;
+          flex-direction: row;
+          flex-wrap: wrap;
+          padding: 20px 24px;
+          gap: 12px;
+          align-items: center;
+        }
+        .toc,
+        .rail-meta {
+          display: none;
+        }
+        .rail-links {
+          flex-direction: row;
+          flex-wrap: wrap;
+          margin-top: 0;
+        }
+        .main {
+          padding: 0 24px;
+        }
+        .exec-grid {
+          grid-template-columns: 1fr;
+        }
+        .score-cards {
+          grid-template-columns: 1fr;
+        }
+        .replicate-grid {
+          grid-template-columns: 1fr;
+        }
+        .cs-footer {
+          flex-direction: column;
+          gap: 16px;
+          padding: 32px 24px;
+          text-align: center;
+        }
+        .lesson-item {
+          grid-template-columns: 1fr;
+        }
+        .lesson-num {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <!-- RAIL -->
+      <aside class="rail">
+        <a href="index.html" class="rail-back">← Systems</a>
+
+        <div class="rail-divider"></div>
+
+        <div>
+          <div class="rail-id">CS-001 / AI Systems</div>
+          <div class="rail-title">PCBO v2 — Hardware Architect</div>
+          <div class="rail-status">
+            <span class="status-dot"></span>Complete
+          </div>
+        </div>
+
+        <div class="rail-divider"></div>
+
+        <nav class="toc">
+          <div class="toc-label">Contents</div>
+          <a href="#problem">Problem Space</a>
+          <a href="#constraints">Constraints</a>
+          <a href="#architecture">Architecture</a>
+          <a href="#decisions">Decisions</a>
+          <a href="#artifact">Decision Artifact</a>
+          <a href="#benchmark">Benchmark</a>
+          <a href="#lessons">Lessons</a>
+          <a href="#replicability">Replicability</a>
+        </nav>
+
+        <div class="rail-divider"></div>
+
+        <div class="rail-meta">
+          <div class="meta-row">
+            <span class="meta-key">Type</span>
+            <span class="meta-val">Solo End-to-End</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Domain</span>
+            <span class="meta-val">AI Systems</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Benchmark</span>
+            <span class="meta-val">23 / 25</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Accuracy</span>
+            <span class="meta-val">±5% thermal</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Validation</span>
+            <span class="meta-val">&lt; 30 sec / build</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Status</span>
+            <span class="meta-val" style="color: var(--green)">Complete</span>
+          </div>
+        </div>
+
+        <div class="rail-links">
+          <a href="#">View on GitHub</a>
+          <a href="#">Read Case Study PDF</a>
+        </div>
+      </aside>
+
+      <!-- MAIN -->
+      <main class="main">
+        <!-- HEADER -->
+        <header class="cs-header">
+          <div class="cs-breadcrumb">
+            Alex Mercer <span>·</span> Case Studies <span>·</span> CS-001
+          </div>
+          <div class="cs-id-row">
+            <span class="cs-id">CS-001</span>
+            <span class="cs-badge badge-complete">Complete</span>
+            <span class="cs-badge badge-solo">Solo</span>
+          </div>
+          <h1 class="cs-title">
+            Designing a Constraint-Driven AI Agent for Hardware Specification
+            Validation
+          </h1>
+          <div class="cs-chips">
+            <span class="chip">AI Systems</span>
+            <span class="chip">Constraint Solver</span>
+            <span class="chip">Knowledge Graph</span>
+            <span class="chip">Deterministic Ontology</span>
+            <span class="chip">LLM Integration</span>
+            <span class="chip">Decision Artifact</span>
+            <span class="chip chip-accent">23/25 benchmark</span>
+            <span class="chip chip-accent">±5% thermal accuracy</span>
+          </div>
+        </header>
+
+        <!-- EXECUTIVE SUMMARY -->
+        <div class="exec-summary">
+          <div class="exec-label">Executive Summary</div>
+          <div class="exec-grid">
+            <div class="exec-item">
+              <div class="exec-key">Domain</div>
+              <div class="exec-val">
+                PC hardware configuration in constraint-heavy physical domains
+              </div>
+            </div>
+            <div class="exec-item">
+              <div class="exec-key">Core Problem</div>
+              <div class="exec-val">
+                LLMs produce plausible but physically invalid hardware
+                configurations
+              </div>
+            </div>
+            <div class="exec-item">
+              <div class="exec-key">Primary Constraint</div>
+              <div class="exec-val">
+                Constraints must block generation — not filter output after the
+                fact
+              </div>
+            </div>
+            <div class="exec-item">
+              <div class="exec-key">Architecture Focus</div>
+              <div class="exec-val">
+                Deterministic ontology layer + iterative constraint solver loop
+              </div>
+            </div>
+            <div class="exec-item">
+              <div class="exec-key">Scale</div>
+              <div class="exec-val">
+                5,000+ SKU knowledge graph · 200 physical assemblies validated
+              </div>
+            </div>
+            <div class="exec-item">
+              <div class="exec-key">Outcome</div>
+              <div class="exec-val">
+                23/25 benchmark · ±5% thermal accuracy · &lt;30 sec per build
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROBLEM -->
+        <section class="cs-section" id="problem">
+          <div class="section-label">Problem Space</div>
+          <h2 class="section-h">The Plausibility Trap</h2>
+          <p class="section-p">
+            Language models predict the next plausible token — they do not
+            compute. In hardware configuration, this distinction is critical. A
+            CPU has a fixed TDP. A GPU has a fixed length. A chassis has a fixed
+            cooler clearance. These are physical facts, not interpretations.
+          </p>
+          <p class="section-p">
+            A vanilla LLM asked to configure a system will produce output that
+            <em style="color: var(--text); font-style: normal">sounds</em>
+            architecturally sound. It will pair a 180W CPU with a 65W cooler. It
+            will recommend a GPU that doesn't fit the chassis. It will undersize
+            the PSU for peak draw. Not occasionally — systematically, with full
+            confidence. This is the Plausibility Trap: high fluency masking zero
+            correctness.
+          </p>
+          <p class="section-p">
+            Existing configurators (PC Part Picker and similar) solve basic
+            compatibility — socket match, form factor. They don't compute
+            thermal envelopes, don't reason about workload-specific tradeoffs,
+            and don't produce an explanation of why a component was chosen or
+            rejected. They lack context. LLMs have context but lack correctness.
+            The problem required combining both.
+          </p>
+        </section>
+
+        <!-- CONSTRAINTS -->
+        <section class="cs-section" id="constraints">
+          <div class="section-label">Design Constraints</div>
+          <h2 class="section-h">
+            Boundaries established before implementation
+          </h2>
+          <p class="section-p" style="margin-bottom: 24px">
+            Before writing a line of code, I established what a valid solution
+            must satisfy. These constraints shaped every architectural decision
+            that followed.
+          </p>
+          <div class="constraint-list">
+            <div class="constraint-item">
+              <span class="constraint-num">01</span>
+              <span class="constraint-text"
+                >The agent must <strong>not be able to output</strong> a
+                physically invalid configuration. Not "rarely" — never within
+                the validated knowledge graph.</span
+              >
+            </div>
+            <div class="constraint-item">
+              <span class="constraint-num">02</span>
+              <span class="constraint-text"
+                >Every component selection must trace to a
+                <strong>specific parameter in a specific datasheet</strong> —
+                not to model weights.</span
+              >
+            </div>
+            <div class="constraint-item">
+              <span class="constraint-num">03</span>
+              <span class="constraint-text"
+                >The system must explain
+                <strong>rejected alternatives</strong> — not just present a
+                final answer. Decisions must be auditable.</span
+              >
+            </div>
+            <div class="constraint-item">
+              <span class="constraint-num">04</span>
+              <span class="constraint-text"
+                >Full build validation must complete in
+                <strong>under 60 seconds</strong>. Target: under 30.</span
+              >
+            </div>
+            <div class="constraint-item">
+              <span class="constraint-num">05</span>
+              <span class="constraint-text"
+                >The architecture must be <strong>domain-agnostic</strong> —
+                replicable to other constraint-heavy domains without rebuilding
+                from scratch.</span
+              >
+            </div>
+            <div class="constraint-item">
+              <span class="constraint-num">06</span>
+              <span class="constraint-text"
+                >Scope is limited to
+                <strong>components with published datasheets</strong>. No-name
+                parts and custom liquid cooling loops are explicitly out of
+                scope — reliability requires verified data.</span
+              >
+            </div>
+          </div>
+        </section>
+
+        <!-- ARCHITECTURE -->
+        <section class="cs-section" id="architecture">
+          <div class="section-label">Architecture</div>
+          <h2 class="section-h">Three-layer constraint pipeline</h2>
+          <p class="section-p" style="margin-bottom: 28px">
+            The system executes three layers in sequence for every generation
+            cycle. The key insight: constraints are not a post-processing filter
+            — they are a precondition of output. The LLM cannot exit the loop
+            until the full specification passes mathematical validation.
+          </p>
+
+          <div class="diagram-placeholder">
+            <div class="diagram-placeholder-label">
+              Architecture Diagram / In Development
+            </div>
+            <div class="diagram-placeholder-title">
+              Three-layer constraint pipeline
+            </div>
+            <div
+              class="diagram-placeholder-flow"
+              style="margin-top: 20px; gap: 0"
+            >
+              <div class="flow-node">
+                User Input<br /><span
+                  style="color: var(--text3); font-size: 9px"
+                  >Natural language</span
+                >
+              </div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-node accent">
+                LLM Layer<br /><span style="font-size: 9px"
+                  >Intent + Proposal</span
+                >
+              </div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-node accent">
+                Ontology<br /><span style="font-size: 9px"
+                  >5000+ SKU graph</span
+                >
+              </div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-node accent">
+                Solver<br /><span style="font-size: 9px"
+                  >Generate → Validate</span
+                >
+              </div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-node">
+                Artifact<br /><span style="color: var(--text3); font-size: 9px"
+                  >Traced output</span
+                >
+              </div>
+            </div>
+            <div class="diagram-placeholder-sub" style="margin-top: 16px">
+              Interactive SVG diagram · Atomic Design component · Scheduled for
+              v1.1
+            </div>
+          </div>
+
+          <div
+            style="
+              margin-top: 28px;
+              display: flex;
+              flex-direction: column;
+              gap: 16px;
+            "
+          >
+            <div
+              style="
+                padding: 20px 24px;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+              "
+            >
+              <div
+                style="
+                  font-family: var(--mono);
+                  font-size: 9px;
+                  color: var(--accent);
+                  letter-spacing: 0.1em;
+                  text-transform: uppercase;
+                  margin-bottom: 8px;
+                "
+              >
+                Layer 1 — LLM
+              </div>
+              <div
+                style="
+                  font-size: 14px;
+                  font-weight: 500;
+                  color: var(--text);
+                  margin-bottom: 6px;
+                "
+              >
+                Intent Extraction & Component Proposal
+              </div>
+              <div
+                style="font-size: 13px; color: var(--text2); line-height: 1.65"
+              >
+                Parses natural language input: budget ceiling, use case, fixed
+                components, soft preferences (acoustic class, size). Produces a
+                structured component proposal — not a text response.
+              </div>
+            </div>
+            <div
+              style="
+                padding: 20px 24px;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+              "
+            >
+              <div
+                style="
+                  font-family: var(--mono);
+                  font-size: 9px;
+                  color: var(--accent);
+                  letter-spacing: 0.1em;
+                  text-transform: uppercase;
+                  margin-bottom: 8px;
+                "
+              >
+                Layer 2 — Deterministic Ontology
+              </div>
+              <div
+                style="
+                  font-size: 14px;
+                  font-weight: 500;
+                  color: var(--text);
+                  margin-bottom: 6px;
+                "
+              >
+                Semantic Fact-Checking Against 5,000+ SKU Knowledge Graph
+              </div>
+              <div
+                style="font-size: 13px; color: var(--text2); line-height: 1.65"
+              >
+                Each proposed component is looked up by URI against its physical
+                parameters: socket type, TDP envelope, dimensional footprint,
+                PCIe lane requirements, voltage phase. No hallucination is
+                possible at this layer — the layer is not probabilistic.
+              </div>
+            </div>
+            <div
+              style="
+                padding: 20px 24px;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+              "
+            >
+              <div
+                style="
+                  font-family: var(--mono);
+                  font-size: 9px;
+                  color: var(--accent);
+                  letter-spacing: 0.1em;
+                  text-transform: uppercase;
+                  margin-bottom: 8px;
+                "
+              >
+                Layer 3 — Constraint Solver
+              </div>
+              <div
+                style="
+                  font-size: 14px;
+                  font-weight: 500;
+                  color: var(--text);
+                  margin-bottom: 6px;
+                "
+              >
+                Generate → Validate → Reject Loop
+              </div>
+              <div
+                style="font-size: 13px; color: var(--text2); line-height: 1.65"
+              >
+                If the proposal violates any constraint class, the solver
+                constructs a structured error — which constraint failed, by what
+                margin, which component triggered it — and injects it back into
+                LLM context. The model rebuilds. The loop exits only on a full
+                pass across all seven constraint classes.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ARCHITECTURE DECISIONS -->
+        <section class="cs-section" id="decisions">
+          <div class="section-label">Architecture Decisions</div>
+
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 1px;
+              background: var(--border);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              overflow: hidden;
+            "
+          >
+            <div style="background: var(--surface); padding: 24px 28px">
+              <div
+                style="
+                  font-family: var(--mono);
+                  font-size: 9px;
+                  color: var(--text3);
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  margin-bottom: 12px;
+                "
+              >
+                Decision 01
+              </div>
+              <div
+                style="
+                  font-size: 15px;
+                  font-weight: 500;
+                  color: var(--text);
+                  margin-bottom: 8px;
+                "
+              >
+                Constraints as a generation precondition, not a filter
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 1fr 1fr;
+                  gap: 16px;
+                  font-size: 13px;
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      font-family: var(--mono);
+                      font-size: 9px;
+                      color: var(--text3);
+                      margin-bottom: 4px;
+                      letter-spacing: 0.06em;
+                      text-transform: uppercase;
+                    "
+                  >
+                    Reason
+                  </div>
+                  <div style="color: var(--text2); line-height: 1.65">
+                    Post-generation filtering catches errors but doesn't prevent
+                    them. The model can still generate invalid reasoning paths
+                    that contaminate the output even when the final answer is
+                    corrected.
+                  </div>
+                </div>
+                <div>
+                  <div
+                    style="
+                      font-family: var(--mono);
+                      font-size: 9px;
+                      color: var(--text3);
+                      margin-bottom: 4px;
+                      letter-spacing: 0.06em;
+                      text-transform: uppercase;
+                    "
+                  >
+                    Tradeoff
+                  </div>
+                  <div style="color: var(--text2); line-height: 1.65">
+                    30–40 sec validation vs. 5–10 sec for vanilla LLM. Accepted:
+                    the cost of a wrong answer in hardware procurement far
+                    exceeds the time delta.
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  margin-top: 12px;
+                  font-family: var(--mono);
+                  font-size: 10px;
+                  color: var(--text3);
+                "
+              >
+                Alternative rejected: output validation layer → generates
+                plausible-sounding invalid paths internally before correction
+              </div>
+            </div>
+
+            <div style="background: var(--surface); padding: 24px 28px">
+              <div
+                style="
+                  font-family: var(--mono);
+                  font-size: 9px;
+                  color: var(--text3);
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  margin-bottom: 12px;
+                "
+              >
+                Decision 02
+              </div>
+              <div
+                style="
+                  font-size: 15px;
+                  font-weight: 500;
+                  color: var(--text);
+                  margin-bottom: 8px;
+                "
+              >
+                URI-addressable knowledge graph over model memory
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 1fr 1fr;
+                  gap: 16px;
+                  font-size: 13px;
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      font-family: var(--mono);
+                      font-size: 9px;
+                      color: var(--text3);
+                      margin-bottom: 4px;
+                      letter-spacing: 0.06em;
+                      text-transform: uppercase;
+                    "
+                  >
+                    Reason
+                  </div>
+                  <div style="color: var(--text2); line-height: 1.65">
+                    Physical parameters are facts, not distributions. A model
+                    that "knows" a component's TDP is making a probabilistic
+                    guess. The ontology holds the exact value from the
+                    manufacturer datasheet.
+                  </div>
+                </div>
+                <div>
+                  <div
+                    style="
+                      font-family: var(--mono);
+                      font-size: 9px;
+                      color: var(--text3);
+                      margin-bottom: 4px;
+                      letter-spacing: 0.06em;
+                      text-transform: uppercase;
+                    "
+                  >
+                    Tradeoff
+                  </div>
+                  <div style="color: var(--text2); line-height: 1.65">
+                    Requires maintaining the SKU database. Components without
+                    confirmed datasheets are excluded. Reliability requires data
+                    — this is a feature, not a limitation.
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  margin-top: 12px;
+                  font-family: var(--mono);
+                  font-size: 10px;
+                  color: var(--text3);
+                "
+              >
+                Alternative rejected: RAG over PDF datasheets → extraction
+                errors propagate as valid facts
+              </div>
+            </div>
+
+            <div style="background: var(--surface); padding: 24px 28px">
+              <div
+                style="
+                  font-family: var(--mono);
+                  font-size: 9px;
+                  color: var(--text3);
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  margin-bottom: 12px;
+                "
+              >
+                Decision 03
+              </div>
+              <div
+                style="
+                  font-size: 15px;
+                  font-weight: 500;
+                  color: var(--text);
+                  margin-bottom: 8px;
+                "
+              >
+                Structured error injection over simple retry
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 1fr 1fr;
+                  gap: 16px;
+                  font-size: 13px;
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      font-family: var(--mono);
+                      font-size: 9px;
+                      color: var(--text3);
+                      margin-bottom: 4px;
+                      letter-spacing: 0.06em;
+                      text-transform: uppercase;
+                    "
+                  >
+                    Reason
+                  </div>
+                  <div style="color: var(--text2); line-height: 1.65">
+                    A retry without structured feedback causes random
+                    substitution. The model needs to know exactly which
+                    constraint failed, by what margin, and which component
+                    triggered it.
+                  </div>
+                </div>
+                <div>
+                  <div
+                    style="
+                      font-family: var(--mono);
+                      font-size: 9px;
+                      color: var(--text3);
+                      margin-bottom: 4px;
+                      letter-spacing: 0.06em;
+                      text-transform: uppercase;
+                    "
+                  >
+                    Tradeoff
+                  </div>
+                  <div style="color: var(--text2); line-height: 1.65">
+                    Error message format required 6 iterations to converge. Too
+                    vague → random substitution. Too specific →
+                    over-optimization breaks other constraints.
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  margin-top: 12px;
+                  font-family: var(--mono);
+                  font-size: 10px;
+                  color: var(--text3);
+                "
+              >
+                Alternative rejected: simple regeneration prompt → model makes
+                random substitutions without targeted correction
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- DECISION ARTIFACT -->
+        <section class="cs-section" id="artifact">
+          <div class="section-label">Decision Artifact</div>
+          <p class="section-p" style="margin-bottom: 24px">
+            Every build produces a structured Decision Artifact — the mandatory
+            trace output that makes the system's reasoning auditable without
+            reading source code. Below is the cooler selection node from the
+            benchmark build. Toggle between raw terminal output and structured
+            card view.
+          </p>
+
+          <div class="toggle-bar">
+            <span class="toggle-label-text">View mode</span>
+            <div class="toggle-group">
+              <button
+                class="toggle-btn on"
+                onclick="switchArtifact('terminal', this)"
+              >
+                Terminal
+              </button>
+              <button
+                class="toggle-btn"
+                onclick="switchArtifact('cards', this)"
+              >
+                Cards
+              </button>
+            </div>
+          </div>
+
+          <!-- TERMINAL VIEW -->
+          <div id="artifact-terminal">
+            <div class="terminal-block">
+              <div class="terminal-topbar">
+                <span class="term-dot term-dot-r"></span>
+                <span class="term-dot term-dot-y"></span>
+                <span class="term-dot term-dot-g"></span>
+                <span class="terminal-filename"
+                  >decision_artifact.log — cooler_selection</span
+                >
+              </div>
+              <div class="terminal-body">
+                <span class="t-comment"
+                  ># ─── DECISION ARTIFACT ─── NODE: cpu_cooler
+                  ───────────────</span
+                >
+
+                <span class="t-section">COMPONENT: CPU Cooler</span>
+                <span class="t-indent"
+                  ><span class="t-key">SELECTED</span>
+                  <span class="t-val">be quiet! Dark Rock 4</span></span
+                >
+
+                <span class="t-section">RATIONALE:</span>
+                <span class="t-indent"
+                  ><span class="t-key">rated_tdp</span>
+                  <span class="t-val">250W</span></span
+                >
+                <span class="t-indent"
+                  ><span class="t-key">cpu_tdp</span>
+                  <span class="t-val">105W (AMD Ryzen 7 7700X)</span></span
+                >
+                <span class="t-indent"
+                  ><span class="t-key">margin_factor</span>
+                  <span class="t-pass"
+                    >2.38× ✓ above 2.0× threshold at +32°C ambient</span
+                  ></span
+                >
+                <span class="t-indent"
+                  ><span class="t-key">height_mm</span>
+                  <span class="t-val">162.8mm</span></span
+                >
+                <span class="t-indent"
+                  ><span class="t-key">chassis_clearance</span>
+                  <span class="t-val">165.0mm</span></span
+                >
+                <span class="t-indent"
+                  ><span class="t-key">fit_margin</span>
+                  <span class="t-warn"
+                    >2.2mm ⚠ within spec — flagged, no adjustment room</span
+                  ></span
+                >
+                <span class="t-indent"
+                  ><span class="t-key">ram_conflict</span>
+                  <span class="t-pass"
+                    >none ✓ width 135.4mm clears slot 1</span
+                  ></span
+                >
+
+                <span class="t-section">REJECTED:</span>
+                <span class="t-indent"
+                  ><span class="t-key">Noctua NH-D15</span></span
+                >
+                <span class="t-indent2"
+                  ><span class="t-reject"
+                    >→ height: 165.0mm chassis_clearance: 165.0mm margin: 0mm
+                    [FAIL: dimensional]</span
+                  ></span
+                >
+
+                <span class="t-indent"
+                  ><span class="t-key"
+                    >Thermalright Peerless Assassin 120 SE</span
+                  ></span
+                >
+                <span class="t-indent2"
+                  ><span class="t-reject"
+                    >→ tdp: 220W margin_at_32c: 1.76× threshold: 2.0× [FAIL:
+                    thermal]</span
+                  ></span
+                >
+
+                <span class="t-section">RESIDUAL RISK:</span>
+                <span class="t-indent"
+                  ><span class="t-warn"
+                    >⚠ fit_margin 2.2mm — verify clearance after assembly before
+                    closing panel</span
+                  ></span
+                >
+                <span class="t-indent"
+                  ><span class="t-warn"
+                    >⚠ if case panel bows under transport, contact is
+                    possible</span
+                  ></span
+                >
+
+                <span class="t-comment"
+                  ># ─── VALIDATION: PASS
+                  ──────────────────────────────────────</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- CARDS VIEW -->
+          <div id="artifact-cards" style="display: none">
+            <div class="artifact-cards">
+              <div class="artifact-card">
+                <div class="ac-header">
+                  <span class="ac-field">Selected Component</span>
+                  <span class="ac-result ac-pass">Pass</span>
+                </div>
+                <div class="ac-title">be quiet! Dark Rock 4</div>
+                <div class="ac-rationale">
+                  Thermal margin 2.38× at +32°C ambient — above the 2.0×
+                  threshold required for sustained load. Height 162.8mm fits
+                  chassis clearance of 165mm with 2.2mm margin. No RAM slot
+                  conflict.
+                </div>
+                <div class="ac-row">
+                  <span class="ac-chip">TDP 250W</span>
+                  <span class="ac-chip">CPU 105W</span>
+                  <span class="ac-chip">Margin 2.38×</span>
+                  <span class="ac-chip">Height 162.8mm</span>
+                </div>
+              </div>
+              <div class="artifact-card">
+                <div class="ac-header">
+                  <span class="ac-field">Rejected — Noctua NH-D15</span>
+                  <span class="ac-result ac-fail">Fail: dimensional</span>
+                </div>
+                <div class="ac-title">Height 165mm vs. 165mm clearance</div>
+                <div class="ac-rationale">
+                  Zero margin between cooler height and chassis clearance. Any
+                  case panel flex or mounting tolerance variance causes contact.
+                  Dimensional constraint failed.
+                </div>
+                <div class="ac-row">
+                  <span class="ac-chip ac-chip-reject">Height 165.0mm</span>
+                  <span class="ac-chip ac-chip-reject">Clearance 165.0mm</span>
+                  <span class="ac-chip ac-chip-reject">Margin 0mm</span>
+                </div>
+              </div>
+              <div class="artifact-card">
+                <div class="ac-header">
+                  <span class="ac-field"
+                    >Rejected — Thermalright Peerless Assassin</span
+                  >
+                  <span class="ac-result ac-fail">Fail: thermal</span>
+                </div>
+                <div class="ac-title">
+                  Margin 1.76× — below threshold at elevated ambient
+                </div>
+                <div class="ac-rationale">
+                  Rated TDP 220W gives a 2.1× margin at standard ambient —
+                  technically adequate. At +32°C, effective margin drops to
+                  1.76×, below the 2.0× floor required for the test conditions.
+                </div>
+                <div class="ac-row">
+                  <span class="ac-chip ac-chip-reject">TDP 220W</span>
+                  <span class="ac-chip ac-chip-reject">Margin 1.76× @32°C</span>
+                  <span class="ac-chip ac-chip-reject">Threshold 2.0×</span>
+                </div>
+              </div>
+              <div class="artifact-card">
+                <div class="ac-header">
+                  <span class="ac-field">Residual Risk</span>
+                  <span class="ac-result ac-warn">Flagged</span>
+                </div>
+                <div class="ac-title">
+                  Fit margin 2.2mm — verify post-assembly
+                </div>
+                <div class="ac-rationale">
+                  Within specification, but leaves no adjustment room. If the
+                  case panel bows under transport, contact with cooler is
+                  possible. Verify clearance after mounting, before closing the
+                  panel.
+                </div>
+                <div class="ac-row">
+                  <span class="ac-chip ac-chip-risk">2.2mm clearance</span>
+                  <span class="ac-chip ac-chip-risk"
+                    >Manual verification required</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- BENCHMARK -->
+        <section class="cs-section" id="benchmark">
+          <div class="section-label">Benchmark</div>
+          <h2 class="section-h">
+            Silent build at +32°C ambient · $1,500 budget
+          </h2>
+          <p class="section-p" style="margin-bottom: 24px">
+            Comparative test: design a thermally stable, acoustically quiet PC
+            within a fixed budget under elevated ambient temperature. Air
+            cooling only. Scored across four dimensions: thermal validation,
+            compatibility, decision trace, and acoustic compliance.
+          </p>
+
+          <div class="toggle-bar">
+            <span class="toggle-label-text">View mode</span>
+            <div class="toggle-group">
+              <button
+                class="toggle-btn on"
+                onclick="switchBench('table', this)"
+              >
+                Table
+              </button>
+              <button class="toggle-btn" onclick="switchBench('scores', this)">
+                Score Cards
+              </button>
+            </div>
+          </div>
+
+          <!-- TABLE VIEW -->
+          <div
+            id="bench-table-wrap"
+            style="
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              overflow: hidden;
+            "
+          >
+            <table class="bench-table">
+              <thead>
+                <tr>
+                  <th>System</th>
+                  <th>Score</th>
+                  <th>Thermal</th>
+                  <th>Compatibility</th>
+                  <th>Trace</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="highlight">
+                  <td><strong>PCBO v2</strong></td>
+                  <td class="score-cell score-hi">23/25</td>
+                  <td class="score-cell score-hi">✓ Pass</td>
+                  <td class="score-cell score-hi">✓ All 7</td>
+                  <td class="score-cell score-hi">✓ Complete</td>
+                  <td class="bench-note">
+                    −2 pts: ambient risk note insufficiently specific
+                  </td>
+                </tr>
+                <tr>
+                  <td>Manual (Senior Engineer)</td>
+                  <td class="score-cell score-mid">19/25</td>
+                  <td class="score-cell score-hi">✓ Pass</td>
+                  <td class="score-cell score-hi">✓ Pass</td>
+                  <td class="score-cell score-lo">✗ None</td>
+                  <td class="bench-note">
+                    Budget exceeded ~$80 after adequate cooling added
+                  </td>
+                </tr>
+                <tr>
+                  <td>Claude 3 (vanilla)</td>
+                  <td class="score-cell score-mid">14/25</td>
+                  <td class="score-cell score-lo">✗ No calc</td>
+                  <td class="score-cell score-mid">~ Partial</td>
+                  <td class="score-cell score-lo">✗ None</td>
+                  <td class="bench-note">
+                    Better component awareness, PSU undersized for peak draw
+                  </td>
+                </tr>
+                <tr>
+                  <td>GPT-4 (vanilla)</td>
+                  <td class="score-cell score-lo">11/25</td>
+                  <td class="score-cell score-lo">✗ Mismatch</td>
+                  <td class="score-cell score-lo">✗ GPU OOB</td>
+                  <td class="score-cell score-lo">✗ None</td>
+                  <td class="bench-note">
+                    CPU/cooler TDP mismatch, GPU clearance not verified
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- SCORE CARDS VIEW -->
+          <div id="bench-scores" style="display: none">
+            <div class="score-cards">
+              <div class="score-card featured">
+                <div class="sc-system">PCBO v2</div>
+                <div class="sc-type">Constraint-driven AI agent</div>
+                <div class="sc-score-row">
+                  <span class="sc-score" style="color: var(--accent)">23</span>
+                  <span class="sc-score-total">/ 25</span>
+                </div>
+                <div class="sc-bar-wrap">
+                  <div
+                    class="sc-bar"
+                    style="width: 92%; background: var(--accent)"
+                  ></div>
+                </div>
+                <div class="sc-note">
+                  Thermal ✓ · All 7 constraint classes ✓ · Full trace ✓<br />−2
+                  pts: ambient risk note insufficiently specific
+                </div>
+              </div>
+              <div class="score-card">
+                <div class="sc-system">Manual — Senior Engineer</div>
+                <div class="sc-type">Reference baseline</div>
+                <div class="sc-score-row">
+                  <span class="sc-score" style="color: var(--amber)">19</span>
+                  <span class="sc-score-total">/ 25</span>
+                </div>
+                <div class="sc-bar-wrap">
+                  <div
+                    class="sc-bar"
+                    style="width: 76%; background: var(--amber)"
+                  ></div>
+                </div>
+                <div class="sc-note">
+                  Thermal ✓ · Compatibility ✓ · No decision trace<br />Budget
+                  exceeded ~$80 after adequate cooling
+                </div>
+              </div>
+              <div class="score-card">
+                <div class="sc-system">Claude 3 (vanilla)</div>
+                <div class="sc-type">LLM without constraint layer</div>
+                <div class="sc-score-row">
+                  <span class="sc-score" style="color: var(--amber)">14</span>
+                  <span class="sc-score-total">/ 25</span>
+                </div>
+                <div class="sc-bar-wrap">
+                  <div
+                    class="sc-bar"
+                    style="width: 56%; background: var(--amber)"
+                  ></div>
+                </div>
+                <div class="sc-note">
+                  No thermal calculation · PSU undersized<br />Better component
+                  awareness than GPT-4
+                </div>
+              </div>
+              <div class="score-card">
+                <div class="sc-system">GPT-4 (vanilla)</div>
+                <div class="sc-type">LLM without constraint layer</div>
+                <div class="sc-score-row">
+                  <span class="sc-score" style="color: var(--red)">11</span>
+                  <span class="sc-score-total">/ 25</span>
+                </div>
+                <div class="sc-bar-wrap">
+                  <div
+                    class="sc-bar"
+                    style="width: 44%; background: var(--red)"
+                  ></div>
+                </div>
+                <div class="sc-note">
+                  CPU/cooler TDP mismatch · GPU clearance unverified<br />High
+                  confidence, zero correctness
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- LESSONS -->
+        <section class="cs-section" id="lessons">
+          <div class="section-label">What I Learned</div>
+          <div class="lessons-list">
+            <div class="lesson-item">
+              <div class="lesson-num">01</div>
+              <div>
+                <div class="lesson-title">
+                  Error message format is the hardest engineering problem in the
+                  loop
+                </div>
+                <div class="lesson-body">
+                  The constraint solver itself is essentially a rule engine —
+                  straightforward to build. The hard part was designing the
+                  error message that re-enters the LLM context. Too vague: the
+                  model makes random substitutions. Too specific: the model
+                  over-optimizes for the failing constraint and breaks others.
+                  Six iterations to converge. The format that worked encodes:
+                  constraint class, failing component, margin delta, and the
+                  constraint threshold — nothing more.
+                </div>
+              </div>
+            </div>
+            <div class="lesson-item">
+              <div class="lesson-num">02</div>
+              <div>
+                <div class="lesson-title">
+                  Vanilla LLMs fail not from ignorance but from the absence of
+                  uncertainty signals
+                </div>
+                <div class="lesson-body">
+                  GPT-4 proposed a thermally mismatched cooler with full
+                  confidence. There was no hesitation, no caveat, no signal that
+                  the model was uncertain. The solver creates that signal
+                  artificially: constraint failure operationalizes uncertainty
+                  and forces a rebuild rather than a confident wrong answer.
+                  This is why the architecture works — it manufactures epistemic
+                  humility where none exists natively.
+                </div>
+              </div>
+            </div>
+            <div class="lesson-item">
+              <div class="lesson-num">03</div>
+              <div>
+                <div class="lesson-title">
+                  Knowing your system's validity boundary is as important as
+                  knowing what's inside it
+                </div>
+                <div class="lesson-body">
+                  Custom liquid cooling loops and extreme overclocking were
+                  deliberately excluded — not because the architecture can't
+                  support them, but because the reliability guarantee only holds
+                  where the knowledge graph has verified data. Extending scope
+                  without verified data would convert a reliable system into a
+                  plausible-sounding one. This is a design principle, not a
+                  limitation.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- REPLICABILITY -->
+        <section class="cs-section" id="replicability">
+          <div class="section-label">Replicability</div>
+          <h2 class="section-h">The architecture is the transferable asset</h2>
+          <p class="section-p" style="margin-bottom: 24px">
+            The constraint-driven pattern — LLM proposal → ontology lookup →
+            constraint solver → looped regeneration → decision artifact — is
+            domain-agnostic. PCBO v2 is the first implementation. The same
+            architecture applies to any domain where correctness is a physical
+            or logical fact, not an interpretation.
+          </p>
+          <div class="replicate-grid">
+            <div class="replicate-item">
+              <div class="ri-domain">Electrical Engineering</div>
+              <div class="ri-desc">
+                PCB component selection against power rail, thermal, and EMC
+                constraints. Same solver loop, different ontology.
+              </div>
+            </div>
+            <div class="replicate-item">
+              <div class="ri-domain">Infrastructure Sizing</div>
+              <div class="ri-desc">
+                Server configuration against rack unit, power draw, and thermal
+                density constraints for datacenter design.
+              </div>
+            </div>
+            <div class="replicate-item">
+              <div class="ri-domain">Procurement Validation</div>
+              <div class="ri-desc">
+                Vendor proposals validated against specification compliance
+                requirements. Replaces manual audit with traced output.
+              </div>
+            </div>
+            <div class="replicate-item">
+              <div class="ri-domain">Structural Specification</div>
+              <div class="ri-desc">
+                Material selection against load, weight, and cost constraints.
+                Decision artifact provides mandatory engineering trace.
+              </div>
+            </div>
+          </div>
+          <div
+            style="
+              padding: 20px 24px;
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+            "
+          >
+            <div
+              style="
+                font-family: var(--mono);
+                font-size: 9px;
+                color: var(--text3);
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                margin-bottom: 8px;
+              "
+            >
+              Pattern Core
+            </div>
+            <div
+              style="
+                font-family: var(--mono);
+                font-size: 12px;
+                color: var(--text2);
+                line-height: 2;
+              "
+            >
+              User Input (natural language constraints)<br />
+              <span style="color: var(--text3)">→</span> LLM Layer — intent
+              extraction + component proposal<br />
+              <span style="color: var(--text3)">→</span> Deterministic Ontology
+              — URI-addressable fact lookup<br />
+              <span style="color: var(--text3)">→</span> Constraint Solver —
+              generate / validate / reject loop<br />
+              <span style="color: var(--text3)">→</span> Decision Artifact —
+              mandatory trace output
+            </div>
+          </div>
+        </section>
+
+        <!-- CLOSING -->
+        <section class="cs-section" style="border-bottom: none">
+          <div
+            style="
+              padding: 32px;
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              display: flex;
+              align-items: flex-start;
+              justify-content: space-between;
+              gap: 32px;
+              flex-wrap: wrap;
+            "
+          >
+            <div>
+              <div
+                style="
+                  font-family: var(--mono);
+                  font-size: 9px;
+                  color: var(--text3);
+                  letter-spacing: 0.1em;
+                  text-transform: uppercase;
+                  margin-bottom: 8px;
+                "
+              >
+                This is one of several projects I'm documenting
+              </div>
+              <div
+                style="
+                  font-size: 14px;
+                  color: var(--text2);
+                  max-width: 480px;
+                  line-height: 1.7;
+                "
+              >
+                Available to walk through the architecture, the tradeoffs, and
+                what this approach could look like applied to your domain.
+              </div>
+            </div>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                flex-shrink: 0;
+              "
+            >
+              <a
+                href="#"
+                style="
+                  font-family: var(--mono);
+                  font-size: 11px;
+                  color: var(--accent);
+                  border: 1px solid var(--accent-dim);
+                  padding: 10px 20px;
+                  border-radius: 4px;
+                  transition: background 0.15s;
+                  text-align: center;
+                "
+                onmouseover="this.style.background = 'var(--accent-dim)'"
+                onmouseout="this.style.background = 'transparent'"
+                >Get in touch →</a
+              >
+              <a
+                href="index.html"
+                style="
+                  font-family: var(--mono);
+                  font-size: 11px;
+                  color: var(--text3);
+                  border: 1px solid var(--border2);
+                  padding: 10px 20px;
+                  border-radius: 4px;
+                  transition: background 0.15s;
+                  text-align: center;
+                "
+                onmouseover="this.style.background = 'var(--surface2)'"
+                onmouseout="this.style.background = 'transparent'"
+                >← Back to Systems</a
+              >
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="cs-footer">
+      <div class="footer-left">Alex Mercer · CS-001 · 2026</div>
+      <div class="footer-links">
+        <a href="#">GitHub</a>
+        <a href="#">Telegram</a>
+        <a href="#">Contact</a>
+      </div>
+    </footer>
+
+    <script>
+      function switchArtifact(mode, btn) {
+        document.getElementById("artifact-terminal").style.display =
+          mode === "terminal" ? "block" : "none";
+        document.getElementById("artifact-cards").style.display =
+          mode === "cards" ? "block" : "none";
+        btn
+          .closest(".toggle-group")
+          .querySelectorAll(".toggle-btn")
+          .forEach((b) => b.classList.remove("on"));
+        btn.classList.add("on");
+      }
+
+      function switchBench(mode, btn) {
+        document.getElementById("bench-table-wrap").style.display =
+          mode === "table" ? "block" : "none";
+        document.getElementById("bench-scores").style.display =
+          mode === "scores" ? "block" : "none";
+        btn
+          .closest(".toggle-group")
+          .querySelectorAll(".toggle-btn")
+          .forEach((b) => b.classList.remove("on"));
+        btn.classList.add("on");
+      }
+
+      const tocLinks = document.querySelectorAll(".toc a");
+      const sections = document.querySelectorAll(
+        "section[id], header[id], div[id]",
+      );
+
+      const obs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              tocLinks.forEach((a) => a.classList.remove("active"));
+              const active = document.querySelector(
+                `.toc a[href="#${e.target.id}"]`,
+              );
+              if (active) active.classList.add("active");
+            }
+          });
+        },
+        { rootMargin: "-20% 0px -70% 0px" },
+      );
+
+      document.querySelectorAll("section[id]").forEach((s) => obs.observe(s));
+    </script>
+  </body>
+</html>
