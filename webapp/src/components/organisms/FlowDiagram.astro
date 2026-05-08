@@ -1,0 +1,22 @@
+---
+interface Props {
+  nodes: { label: string; sub: string; accent?: boolean }[];
+}
+const { nodes } = Astro.props;
+---
+<div class="bg-background-secondary border border-dashed border-border-default rounded-md p-12 flex flex-col items-center justify-center gap-3 min-h-[220px] text-center">
+  <div class="font-mono text-[9px] text-accent tracking-[0.12em] uppercase">Architecture Diagram / In Development</div>
+  <div class="text-sm text-content-secondary">Three-layer constraint pipeline</div>
+  <div class="flex flex-wrap items-center justify-center gap-0 mt-5">
+    {nodes.map((node, i) => (
+      <>
+        {i > 0 && <span class="font-mono text-xs text-border-default px-1.5">→</span>}
+        <div class:list={["font-mono text-[10px] border px-3.5 py-1.5 rounded-sm", node.accent ? "border-accent-muted text-accent bg-background-tertiary" : "border-border-default text-content-muted bg-background-tertiary"]}>
+          {node.label}<br/>
+          <span class="text-[9px]">{node.sub}</span>
+        </div>
+      </>
+    ))}
+  </div>
+  <div class="font-mono text-[10px] text-content-muted mt-4">Interactive SVG diagram · Atomic Design component · Scheduled for v1.1</div>
+</div>

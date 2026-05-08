@@ -1,0 +1,11 @@
+---
+interface Props {
+  domain: string;
+  description: string;
+}
+const { domain, description } = Astro.props;
+---
+<div class="bg-background-secondary p-5 transition-colors hover:bg-background-tertiary">
+  <div class="font-mono text-[9px] text-accent tracking-[0.08em] uppercase mb-1.5">{domain}</div>
+  <div class="text-[13px] text-content-secondary leading-relaxed">{description}</div>
+</div>

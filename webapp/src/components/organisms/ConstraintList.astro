@@ -1,0 +1,14 @@
+---
+interface Props {
+  constraints: { num: string; html: string }[];
+}
+const { constraints } = Astro.props;
+---
+<div class="flex flex-col gap-px bg-border-subtle border border-border-subtle rounded-md overflow-hidden">
+  {constraints.map(c => (
+    <div class="bg-background-secondary px-5 py-3.5 flex items-baseline gap-4 text-[13px] text-content-secondary transition-colors hover:bg-background-tertiary">
+      <span class="font-mono text-[10px] text-content-muted w-5 flex-shrink-0">{c.num}</span>
+      <span class="[&_strong]:text-content-primary [&_strong]:font-medium" set:html={c.html} />
+    </div>
+  ))}
+</div>

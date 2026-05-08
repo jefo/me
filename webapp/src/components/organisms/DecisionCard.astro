@@ -1,0 +1,25 @@
+---
+interface Props {
+  num: string;
+  title: string;
+  reason: string;
+  tradeoff: string;
+  rejected: string;
+}
+const { num, title, reason, tradeoff, rejected } = Astro.props;
+---
+<div class="bg-background-secondary p-7">
+  <div class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase mb-3">Decision {num}</div>
+  <div class="text-[15px] font-medium text-content-primary mb-2">{title}</div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-[13px]">
+    <div>
+      <div class="font-mono text-[9px] text-content-muted mb-1 tracking-[0.06em] uppercase">Reason</div>
+      <div class="text-content-secondary leading-relaxed">{reason}</div>
+    </div>
+    <div>
+      <div class="font-mono text-[9px] text-content-muted mb-1 tracking-[0.06em] uppercase">Tradeoff</div>
+      <div class="text-content-secondary leading-relaxed">{tradeoff}</div>
+    </div>
+  </div>
+  <div class="mt-3 font-mono text-[10px] text-content-muted">Alternative rejected: {rejected}</div>
+</div>

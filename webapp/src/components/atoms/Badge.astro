@@ -1,0 +1,17 @@
+---
+interface Props {
+  text: string;
+  variant: 'complete' | 'solo' | 'active' | 'research';
+}
+const { text, variant } = Astro.props;
+
+const variants = {
+  complete: 'bg-green-dim text-green',
+  solo: 'bg-background-secondary text-content-muted border border-border-default',
+  active: 'bg-accent-muted text-accent',
+  research: 'bg-amber-dim text-amber',
+};
+---
+<span class:list={["font-mono text-[9px] px-2 py-0.5 rounded-sm tracking-[0.06em] uppercase", variants[variant]]}>
+  {text}
+</span>

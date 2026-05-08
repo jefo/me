@@ -1,0 +1,47 @@
+---
+interface Row {
+  name: string;
+  score: string;
+  scoreColor: string;
+  thermal: string;
+  thermalColor: string;
+  compatibility: string;
+  compatColor: string;
+  trace: string;
+  traceColor: string;
+  notes: string;
+  highlight?: boolean;
+}
+interface Props {
+  rows: Row[];
+}
+const { rows } = Astro.props;
+---
+<div class="border border-border-subtle rounded-md overflow-hidden">
+  <table class="w-full border-collapse text-[13px]">
+    <thead>
+      <tr class="border-b border-border-default">
+        <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-left font-normal">System</th>
+        <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-left font-normal">Score</th>
+        <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-left font-normal">Thermal</th>
+        <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-left font-normal">Compatibility</th>
+        <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-left font-normal">Trace</th>
+        <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-left font-normal">Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map(row => (
+        <tr class:list={["border-b border-border-subtle last:border-b-0", row.highlight && "bg-background-secondary"]}>
+          <td class:list={["px-4 py-3.5", row.highlight && "border-l-2 border-l-accent"]}>
+            <span class:list={[row.highlight ? "font-medium text-content-primary" : "text-content-secondary"]}>{row.name}</span>
+          </td>
+          <td class:list={["px-4 py-3.5 font-mono font-medium", row.scoreColor]}>{row.score}</td>
+          <td class:list={["px-4 py-3.5 font-mono", row.thermalColor]}>{row.thermal}</td>
+          <td class:list={["px-4 py-3.5 font-mono", row.compatColor]}>{row.compatibility}</td>
+          <td class:list={["px-4 py-3.5 font-mono", row.traceColor]}>{row.trace}</td>
+          <td class="px-4 py-3.5 text-[12px] text-content-muted">{row.notes}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

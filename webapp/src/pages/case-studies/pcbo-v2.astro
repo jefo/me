@@ -1,0 +1,426 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SectionLabel from '../../components/atoms/SectionLabel.astro';
+import CaseSidebar from '../../components/organisms/CaseSidebar.astro';
+import CaseHeader from '../../components/organisms/CaseHeader.astro';
+import ExecSummary from '../../components/organisms/ExecSummary.astro';
+import ConstraintList from '../../components/organisms/ConstraintList.astro';
+import FlowDiagram from '../../components/organisms/FlowDiagram.astro';
+import LayerCard from '../../components/organisms/LayerCard.astro';
+import DecisionCard from '../../components/organisms/DecisionCard.astro';
+import BenchmarkTable from '../../components/organisms/BenchmarkTable.astro';
+import ScoreCard from '../../components/organisms/ScoreCard.astro';
+import LessonItem from '../../components/organisms/LessonItem.astro';
+import ReplicateItem from '../../components/organisms/ReplicateItem.astro';
+
+const toc = [
+  { href: '#problem', text: 'Problem Space' },
+  { href: '#constraints', text: 'Constraints' },
+  { href: '#architecture', text: 'Architecture' },
+  { href: '#decisions', text: 'Decisions' },
+  { href: '#artifact', text: 'Decision Artifact' },
+  { href: '#benchmark', text: 'Benchmark' },
+  { href: '#lessons', text: 'Lessons' },
+  { href: '#replicability', text: 'Replicability' },
+];
+
+const meta = [
+  { label: 'Type', value: 'Solo End-to-End' },
+  { label: 'Domain', value: 'AI Systems' },
+  { label: 'Benchmark', value: '23 / 25' },
+  { label: 'Accuracy', value: '±5% thermal' },
+  { label: 'Validation', value: '< 30 sec / build' },
+  { label: 'Status', value: 'Complete', accent: true },
+];
+
+const execItems = [
+  { key: 'Domain', value: 'PC hardware configuration in constraint-heavy physical domains' },
+  { key: 'Core Problem', value: 'LLMs produce plausible but physically invalid hardware configurations' },
+  { key: 'Primary Constraint', value: 'Constraints must block generation — not filter output after the fact' },
+  { key: 'Architecture Focus', value: 'Deterministic ontology layer + iterative constraint solver loop' },
+  { key: 'Scale', value: '5,000+ SKU knowledge graph · 200 physical assemblies validated' },
+  { key: 'Outcome', value: '23/25 benchmark · ±5% thermal accuracy · <30 sec per build' },
+];
+
+const constraints = [
+  { num: '01', html: 'The agent must <strong>not be able to output</strong> a physically invalid configuration. Not "rarely" — never within the validated knowledge graph.' },
+  { num: '02', html: 'Every component selection must trace to a <strong>specific parameter in a specific datasheet</strong> — not to model weights.' },
+  { num: '03', html: 'The system must explain <strong>rejected alternatives</strong> — not just present a final answer. Decisions must be auditable.' },
+  { num: '04', html: 'Full build validation must complete in <strong>under 60 seconds</strong>. Target: under 30.' },
+  { num: '05', html: 'The architecture must be <strong>domain-agnostic</strong> — replicable to other constraint-heavy domains without rebuilding from scratch.' },
+  { num: '06', html: 'Scope is limited to <strong>components with published datasheets</strong>. No-name parts and custom liquid cooling loops are explicitly out of scope — reliability requires verified data.' },
+];
+
+const flowNodes = [
+  { label: 'User Input', sub: 'Natural language' },
+  { label: 'LLM Layer', sub: 'Intent + Proposal', accent: true },
+  { label: 'Ontology', sub: '5000+ SKU graph', accent: true },
+  { label: 'Solver', sub: 'Generate → Validate', accent: true },
+  { label: 'Artifact', sub: 'Traced output' },
+];
+
+const decisions = [
+  { num: '01', title: 'Constraints as a generation precondition, not a filter', reason: 'Post-generation filtering catches errors but doesn\'t prevent them. The model can still generate invalid reasoning paths that contaminate the output even when the final answer is corrected.', tradeoff: '30–40 sec validation vs. 5–10 sec for vanilla LLM. Accepted: the cost of a wrong answer in hardware procurement far exceeds the time delta.', rejected: 'output validation layer → generates plausible-sounding invalid paths internally before correction' },
+  { num: '02', title: 'URI-addressable knowledge graph over model memory', reason: 'Physical parameters are facts, not distributions. A model that "knows" a component\'s TDP is making a probabilistic guess. The ontology holds the exact value from the manufacturer datasheet.', tradeoff: 'Requires maintaining the SKU database. Components without confirmed datasheets are excluded. Reliability requires data — this is a feature, not a limitation.', rejected: 'RAG over PDF datasheets → extraction errors propagate as valid facts' },
+  { num: '03', title: 'Structured error injection over simple retry', reason: 'A retry without structured feedback causes random substitution. The model needs to know exactly which constraint failed, by what margin, and which component triggered it.', tradeoff: 'Error message format required 6 iterations to converge. Too vague → random substitution. Too specific → over-optimization breaks other constraints.', rejected: 'simple regeneration prompt → model makes random substitutions without targeted correction' },
+];
+
+const benchRows = [
+  { name: 'PCBO v2', score: '23/25', scoreColor: 'text-accent', thermal: '✓ Pass', thermalColor: 'text-accent', compatibility: '✓ All 7', compatColor: 'text-accent', trace: '✓ Complete', traceColor: 'text-accent', notes: '−2 pts: ambient risk note insufficiently specific', highlight: true },
+  { name: 'Manual (Senior Engineer)', score: '19/25', scoreColor: 'text-amber', thermal: '✓ Pass', thermalColor: 'text-accent', compatibility: '✓ Pass', compatColor: 'text-accent', trace: '✗ None', traceColor: 'text-red', notes: 'Budget exceeded ~$80 after adequate cooling added' },
+  { name: 'Claude 3 (vanilla)', score: '14/25', scoreColor: 'text-amber', thermal: '✗ No calc', thermalColor: 'text-red', compatibility: '~ Partial', compatColor: 'text-amber', trace: '✗ None', traceColor: 'text-red', notes: 'Better component awareness, PSU undersized for peak draw' },
+  { name: 'GPT-4 (vanilla)', score: '11/25', scoreColor: 'text-red', thermal: '✗ Mismatch', thermalColor: 'text-red', compatibility: '✗ GPU OOB', compatColor: 'text-red', trace: '✗ None', traceColor: 'text-red', notes: 'CPU/cooler TDP mismatch, GPU clearance not verified' },
+];
+
+const scoreCards = [
+  { name: 'PCBO v2', type: 'Constraint-driven AI agent', score: 23, total: 25, color: 'text-accent', barColor: 'bg-accent', note: 'Thermal ✓ · All 7 constraint classes ✓ · Full trace ✓<br/>−2 pts: ambient risk note insufficiently specific', featured: true },
+  { name: 'Manual — Senior Engineer', type: 'Reference baseline', score: 19, total: 25, color: 'text-amber', barColor: 'bg-amber', note: 'Thermal ✓ · Compatibility ✓ · No decision trace<br/>Budget exceeded ~$80 after adequate cooling' },
+  { name: 'Claude 3 (vanilla)', type: 'LLM without constraint layer', score: 14, total: 25, color: 'text-amber', barColor: 'bg-amber', note: 'No thermal calculation · PSU undersized<br/>Better component awareness than GPT-4' },
+  { name: 'GPT-4 (vanilla)', type: 'LLM without constraint layer', score: 11, total: 25, color: 'text-red', barColor: 'bg-red', note: 'CPU/cooler TDP mismatch · GPU clearance unverified<br/>High confidence, zero correctness' },
+];
+
+const lessons = [
+  { num: '01', title: 'Error message format is the hardest engineering problem in the loop', body: 'The constraint solver itself is essentially a rule engine — straightforward to build. The hard part was designing the error message that re-enters the LLM context. Too vague: the model makes random substitutions. Too specific: the model over-optimizes for the failing constraint and breaks others. Six iterations to converge. The format that worked encodes: constraint class, failing component, margin delta, and the constraint threshold — nothing more.' },
+  { num: '02', title: 'Vanilla LLMs fail not from ignorance but from the absence of uncertainty signals', body: 'GPT-4 proposed a thermally mismatched cooler with full confidence. There was no hesitation, no caveat, no signal that the model was uncertain. The solver creates that signal artificially: constraint failure operationalizes uncertainty and forces a rebuild rather than a confident wrong answer. This is why the architecture works — it manufactures epistemic humility where none exists natively.' },
+  { num: '03', title: 'Knowing your system\'s validity boundary is as important as knowing what\'s inside it', body: 'Custom liquid cooling loops and extreme overclocking were deliberately excluded — not because the architecture can\'t support them, but because the reliability guarantee only holds where the knowledge graph has verified data. Extending scope without verified data would convert a reliable system into a plausible-sounding one. This is a design principle, not a limitation.' },
+];
+
+const replicability = [
+  { domain: 'Electrical Engineering', description: 'PCB component selection against power rail, thermal, and EMC constraints. Same solver loop, different ontology.' },
+  { domain: 'Infrastructure Sizing', description: 'Server configuration against rack unit, power draw, and thermal density constraints for datacenter design.' },
+  { domain: 'Procurement Validation', description: 'Vendor proposals validated against specification compliance requirements. Replaces manual audit with traced output.' },
+  { domain: 'Structural Specification', description: 'Material selection against load, weight, and cost constraints. Decision artifact provides mandatory engineering trace.' },
+];
+---
+
+<Layout title="CS-001 — PCBO v2: Hardware Architect · Alex Mercer">
+  <div class="flex flex-col lg:flex-row min-h-screen max-w-[1400px] mx-auto bg-background-primary">
+    <CaseSidebar
+      caseId="CS-001 / AI Systems"
+      title="PCBO v2 — Hardware Architect"
+      status="Complete"
+      toc={toc}
+      meta={meta}
+    />
+
+    <main class="flex-1 px-8 md:px-16 lg:px-16 max-w-[900px]">
+      <CaseHeader
+        caseId="CS-001"
+        badges={[{ text: 'Complete', variant: 'complete' }, { text: 'Solo', variant: 'solo' }]}
+        title="Designing a Constraint-Driven AI Agent for Hardware Specification Validation"
+        chips={[
+          { text: 'AI Systems' },
+          { text: 'Constraint Solver' },
+          { text: 'Knowledge Graph' },
+          { text: 'Deterministic Ontology' },
+          { text: 'LLM Integration' },
+          { text: 'Decision Artifact' },
+          { text: '23/25 benchmark', accent: true },
+          { text: '±5% thermal accuracy', accent: true },
+        ]}
+      />
+
+      <ExecSummary items={execItems} />
+
+      <!-- Problem -->
+      <section id="problem" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Problem Space" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">The Plausibility Trap</h2>
+        <p class="text-sm text-content-secondary leading-relaxed mb-4">
+          Language models predict the next plausible token — they do not compute. In hardware configuration, this distinction is critical. A CPU has a fixed TDP. A GPU has a fixed length. A chassis has a fixed cooler clearance. These are physical facts, not interpretations.
+        </p>
+        <p class="text-sm text-content-secondary leading-relaxed mb-4">
+          A vanilla LLM asked to configure a system will produce output that <em class="text-content-primary not-italic">sounds</em> architecturally sound. It will pair a 180W CPU with a 65W cooler. It will recommend a GPU that doesn't fit the chassis. It will undersize the PSU for peak draw. Not occasionally — systematically, with full confidence. This is the Plausibility Trap: high fluency masking zero correctness.
+        </p>
+        <p class="text-sm text-content-secondary leading-relaxed">
+          Existing configurators (PC Part Picker and similar) solve basic compatibility — socket match, form factor. They don't compute thermal envelopes, don't reason about workload-specific tradeoffs, and don't produce an explanation of why a component was chosen or rejected. They lack context. LLMs have context but lack correctness. The problem required combining both.
+        </p>
+      </section>
+
+      <!-- Constraints -->
+      <section id="constraints" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Design Constraints" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">Boundaries established before implementation</h2>
+        <p class="text-sm text-content-secondary leading-relaxed mb-6">
+          Before writing a line of code, I established what a valid solution must satisfy. These constraints shaped every architectural decision that followed.
+        </p>
+        <ConstraintList constraints={constraints} />
+      </section>
+
+      <!-- Architecture -->
+      <section id="architecture" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Architecture" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">Three-layer constraint pipeline</h2>
+        <p class="text-sm text-content-secondary leading-relaxed mb-7">
+          The system executes three layers in sequence for every generation cycle. The key insight: constraints are not a post-processing filter — they are a precondition of output. The LLM cannot exit the loop until the full specification passes mathematical validation.
+        </p>
+
+        <FlowDiagram nodes={flowNodes} />
+
+        <div class="mt-7 flex flex-col gap-4">
+          <LayerCard
+            label="Layer 1 — LLM"
+            title="Intent Extraction & Component Proposal"
+            description="Parses natural language input: budget ceiling, use case, fixed components, soft preferences (acoustic class, size). Produces a structured component proposal — not a text response."
+          />
+          <LayerCard
+            label="Layer 2 — Deterministic Ontology"
+            title="Semantic Fact-Checking Against 5,000+ SKU Knowledge Graph"
+            description="Each proposed component is looked up by URI against its physical parameters: socket type, TDP envelope, dimensional footprint, PCIe lane requirements, voltage phase. No hallucination is possible at this layer — the layer is not probabilistic."
+          />
+          <LayerCard
+            label="Layer 3 — Constraint Solver"
+            title="Generate → Validate → Reject Loop"
+            description="If the proposal violates any constraint class, the solver constructs a structured error — which constraint failed, by what margin, which component triggered it — and injects it back into LLM context. The model rebuilds. The loop exits only on a full pass across all seven constraint classes."
+          />
+        </div>
+      </section>
+
+      <!-- Decisions -->
+      <section id="decisions" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Architecture Decisions" />
+        <div class="flex flex-col gap-px bg-border-subtle border border-border-subtle rounded-md overflow-hidden">
+          {decisions.map(d => <DecisionCard {...d} />)}
+        </div>
+      </section>
+
+      <!-- Decision Artifact -->
+      <section id="artifact" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Decision Artifact" />
+        <p class="text-sm text-content-secondary leading-relaxed mb-6">
+          Every build produces a structured Decision Artifact — the mandatory trace output that makes the system's reasoning auditable without reading source code. Below is the cooler selection node from the benchmark build. Toggle between raw terminal output and structured card view.
+        </p>
+
+        <div class="flex items-center justify-between mb-4">
+          <span class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase">View mode</span>
+          <div class="flex bg-background-secondary border border-border-subtle rounded overflow-hidden">
+            <button class="toggle-btn font-mono text-[10px] text-accent px-3.5 py-1.5 bg-background-tertiary tracking-[0.06em] uppercase" data-group="artifact" data-target="terminal">Terminal</button>
+            <button class="toggle-btn font-mono text-[10px] text-content-muted px-3.5 py-1.5 tracking-[0.06em] uppercase hover:text-content-secondary" data-group="artifact" data-target="cards">Cards</button>
+          </div>
+        </div>
+
+        <!-- Terminal View -->
+        <div id="artifact-terminal">
+          <div class="bg-[#0a0d11] border border-border-subtle rounded-md overflow-hidden">
+            <div class="flex items-center gap-2 px-4 py-2.5 border-b border-border-subtle bg-background-secondary">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#3a2020]"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-[#3a3020]"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-[#1a3020]"></span>
+              <span class="font-mono text-[10px] text-content-muted ml-2">decision_artifact.log — cooler_selection</span>
+            </div>
+            <div class="p-6 font-mono text-xs leading-[1.9] overflow-x-auto">
+              <span class="text-content-muted"># ─── DECISION ARTIFACT ─── NODE: cpu_cooler ───────────────</span>
+              <span class="block font-medium text-content-primary mt-2">COMPONENT: CPU Cooler</span>
+              <span class="block pl-5"><span class="text-accent">SELECTED</span> <span class="text-content-secondary">be quiet! Dark Rock 4</span></span>
+              <span class="block font-medium text-content-primary mt-2">RATIONALE:</span>
+              <span class="block pl-5"><span class="text-accent">rated_tdp</span> <span class="text-content-secondary">250W</span></span>
+              <span class="block pl-5"><span class="text-accent">cpu_tdp</span> <span class="text-content-secondary">105W (AMD Ryzen 7 7700X)</span></span>
+              <span class="block pl-5"><span class="text-accent">margin_factor</span> <span class="text-green">2.38× ✓ above 2.0× threshold at +32°C ambient</span></span>
+              <span class="block pl-5"><span class="text-accent">height_mm</span> <span class="text-content-secondary">162.8mm</span></span>
+              <span class="block pl-5"><span class="text-accent">chassis_clearance</span> <span class="text-content-secondary">165.0mm</span></span>
+              <span class="block pl-5"><span class="text-accent">fit_margin</span> <span class="text-amber">2.2mm ⚠ within spec — flagged, no adjustment room</span></span>
+              <span class="block pl-5"><span class="text-accent">ram_conflict</span> <span class="text-green">none ✓ width 135.4mm clears slot 1</span></span>
+              <span class="block font-medium text-content-primary mt-2">REJECTED:</span>
+              <span class="block pl-5"><span class="text-accent">Noctua NH-D15</span></span>
+              <span class="block pl-10"><span class="text-red">→ height: 165.0mm chassis_clearance: 165.0mm margin: 0mm [FAIL: dimensional]</span></span>
+              <span class="block pl-5"><span class="text-accent">Thermalright Peerless Assassin 120 SE</span></span>
+              <span class="block pl-10"><span class="text-red">→ tdp: 220W margin_at_32c: 1.76× threshold: 2.0× [FAIL: thermal]</span></span>
+              <span class="block font-medium text-content-primary mt-2">RESIDUAL RISK:</span>
+              <span class="block pl-5"><span class="text-amber">⚠ fit_margin 2.2mm — verify clearance after assembly before closing panel</span></span>
+              <span class="block pl-5"><span class="text-amber">⚠ if case panel bows under transport, contact is possible</span></span>
+              <span class="text-content-muted mt-2 block"># ─── VALIDATION: PASS ──────────────────────────────────────</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cards View -->
+        <div id="artifact-cards" class="hidden">
+          <div class="flex flex-col gap-px bg-border-subtle border border-border-subtle rounded-md overflow-hidden">
+            <div class="bg-background-secondary p-5">
+              <div class="flex items-center justify-between mb-3">
+                <span class="font-mono text-[10px] text-content-muted tracking-[0.08em] uppercase">Selected Component</span>
+                <span class="font-mono text-[9px] px-2 py-0.5 rounded-sm tracking-[0.06em] uppercase bg-green-dim text-green">Pass</span>
+              </div>
+              <div class="text-sm font-medium text-content-primary mb-1.5">be quiet! Dark Rock 4</div>
+              <div class="text-xs text-content-secondary leading-relaxed mb-3">Thermal margin 2.38× at +32°C ambient — above the 2.0× threshold required for sustained load. Height 162.8mm fits chassis clearance of 165mm with 2.2mm margin. No RAM slot conflict.</div>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="font-mono text-[9px] border border-border-default text-content-muted px-2 py-0.5 rounded-sm">TDP 250W</span>
+                <span class="font-mono text-[9px] border border-border-default text-content-muted px-2 py-0.5 rounded-sm">CPU 105W</span>
+                <span class="font-mono text-[9px] border border-border-default text-content-muted px-2 py-0.5 rounded-sm">Margin 2.38×</span>
+                <span class="font-mono text-[9px] border border-border-default text-content-muted px-2 py-0.5 rounded-sm">Height 162.8mm</span>
+              </div>
+            </div>
+            <div class="bg-background-secondary p-5">
+              <div class="flex items-center justify-between mb-3">
+                <span class="font-mono text-[10px] text-content-muted tracking-[0.08em] uppercase">Rejected — Noctua NH-D15</span>
+                <span class="font-mono text-[9px] px-2 py-0.5 rounded-sm tracking-[0.06em] uppercase bg-red-dim text-red">Fail: dimensional</span>
+              </div>
+              <div class="text-sm font-medium text-content-primary mb-1.5">Height 165mm vs. 165mm clearance</div>
+              <div class="text-xs text-content-secondary leading-relaxed mb-3">Zero margin between cooler height and chassis clearance. Any case panel flex or mounting tolerance variance causes contact. Dimensional constraint failed.</div>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="font-mono text-[9px] border border-red-dim text-red px-2 py-0.5 rounded-sm">Height 165.0mm</span>
+                <span class="font-mono text-[9px] border border-red-dim text-red px-2 py-0.5 rounded-sm">Clearance 165.0mm</span>
+                <span class="font-mono text-[9px] border border-red-dim text-red px-2 py-0.5 rounded-sm">Margin 0mm</span>
+              </div>
+            </div>
+            <div class="bg-background-secondary p-5">
+              <div class="flex items-center justify-between mb-3">
+                <span class="font-mono text-[10px] text-content-muted tracking-[0.08em] uppercase">Rejected — Thermalright Peerless Assassin</span>
+                <span class="font-mono text-[9px] px-2 py-0.5 rounded-sm tracking-[0.06em] uppercase bg-red-dim text-red">Fail: thermal</span>
+              </div>
+              <div class="text-sm font-medium text-content-primary mb-1.5">Margin 1.76× — below threshold at elevated ambient</div>
+              <div class="text-xs text-content-secondary leading-relaxed mb-3">Rated TDP 220W gives a 2.1× margin at standard ambient — technically adequate. At +32°C, effective margin drops to 1.76×, below the 2.0× floor required for the test conditions.</div>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="font-mono text-[9px] border border-red-dim text-red px-2 py-0.5 rounded-sm">TDP 220W</span>
+                <span class="font-mono text-[9px] border border-red-dim text-red px-2 py-0.5 rounded-sm">Margin 1.76× @32°C</span>
+                <span class="font-mono text-[9px] border border-red-dim text-red px-2 py-0.5 rounded-sm">Threshold 2.0×</span>
+              </div>
+            </div>
+            <div class="bg-background-secondary p-5">
+              <div class="flex items-center justify-between mb-3">
+                <span class="font-mono text-[10px] text-content-muted tracking-[0.08em] uppercase">Residual Risk</span>
+                <span class="font-mono text-[9px] px-2 py-0.5 rounded-sm tracking-[0.06em] uppercase bg-amber-dim text-amber">Flagged</span>
+              </div>
+              <div class="text-sm font-medium text-content-primary mb-1.5">Fit margin 2.2mm — verify post-assembly</div>
+              <div class="text-xs text-content-secondary leading-relaxed mb-3">Within specification, but leaves no adjustment room. If the case panel bows under transport, contact with cooler is possible. Verify clearance after mounting, before closing the panel.</div>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="font-mono text-[9px] border border-amber-dim text-amber px-2 py-0.5 rounded-sm">2.2mm clearance</span>
+                <span class="font-mono text-[9px] border border-amber-dim text-amber px-2 py-0.5 rounded-sm">Manual verification required</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Benchmark -->
+      <section id="benchmark" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Benchmark" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">Silent build at +32°C ambient · $1,500 budget</h2>
+        <p class="text-sm text-content-secondary leading-relaxed mb-6">
+          Comparative test: design a thermally stable, acoustically quiet PC within a fixed budget under elevated ambient temperature. Air cooling only. Scored across four dimensions: thermal validation, compatibility, decision trace, and acoustic compliance.
+        </p>
+
+        <div class="flex items-center justify-between mb-4">
+          <span class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase">View mode</span>
+          <div class="flex bg-background-secondary border border-border-subtle rounded overflow-hidden">
+            <button class="toggle-btn font-mono text-[10px] text-accent px-3.5 py-1.5 bg-background-tertiary tracking-[0.06em] uppercase" data-group="bench" data-target="table">Table</button>
+            <button class="toggle-btn font-mono text-[10px] text-content-muted px-3.5 py-1.5 tracking-[0.06em] uppercase hover:text-content-secondary" data-group="bench" data-target="scores">Score Cards</button>
+          </div>
+        </div>
+
+        <div id="bench-table">
+          <BenchmarkTable rows={benchRows} />
+        </div>
+
+        <div id="bench-scores" class="hidden">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-px bg-border-subtle border border-border-subtle rounded-md overflow-hidden">
+            {scoreCards.map(card => <ScoreCard {...card} />)}
+          </div>
+        </div>
+      </section>
+
+      <!-- Lessons -->
+      <section id="lessons" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="What I Learned" />
+        <div class="flex flex-col gap-px bg-border-subtle border border-border-subtle rounded-md overflow-hidden">
+          {lessons.map(l => <LessonItem {...l} />)}
+        </div>
+      </section>
+
+      <!-- Replicability -->
+      <section id="replicability" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Replicability" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">The architecture is the transferable asset</h2>
+        <p class="text-sm text-content-secondary leading-relaxed mb-6">
+          The constraint-driven pattern — LLM proposal → ontology lookup → constraint solver → looped regeneration → decision artifact — is domain-agnostic. PCBO v2 is the first implementation. The same architecture applies to any domain where correctness is a physical or logical fact, not an interpretation.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-px bg-border-subtle border border-border-subtle rounded-md overflow-hidden mb-6">
+          {replicability.map(r => <ReplicateItem {...r} />)}
+        </div>
+        <div class="p-5 bg-background-secondary border border-border-subtle rounded-md">
+          <div class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase mb-2">Pattern Core</div>
+          <div class="font-mono text-xs text-content-secondary leading-8">
+            User Input (natural language constraints)<br/>
+            <span class="text-content-muted">→</span> LLM Layer — intent extraction + component proposal<br/>
+            <span class="text-content-muted">→</span> Deterministic Ontology — URI-addressable fact lookup<br/>
+            <span class="text-content-muted">→</span> Constraint Solver — generate / validate / reject loop<br/>
+            <span class="text-content-muted">→</span> Decision Artifact — mandatory trace output
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section class="py-12">
+        <div class="p-8 bg-background-secondary border border-border-subtle rounded-md flex flex-col md:flex-row items-start justify-between gap-8">
+          <div>
+            <div class="font-mono text-[9px] text-content-muted tracking-[0.1em] uppercase mb-2">This is one of several projects I'm documenting</div>
+            <div class="text-sm text-content-secondary max-w-[480px] leading-relaxed">Available to walk through the architecture, the tradeoffs, and what this approach could look like applied to your domain.</div>
+          </div>
+          <div class="flex flex-col gap-2 flex-shrink-0">
+            <a href="#" class="font-mono text-[11px] text-accent border border-accent-muted px-5 py-2.5 rounded text-center transition-colors hover:bg-accent-muted">Get in touch →</a>
+            <a href="/" class="font-mono text-[11px] text-content-muted border border-border-default px-5 py-2.5 rounded text-center transition-colors hover:bg-background-tertiary">← Back to Systems</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="py-10 border-t border-border-subtle flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="font-mono text-[10px] text-content-muted">Alex Mercer · CS-001 · 2026</div>
+        <div class="flex gap-6">
+          <a href="#" class="font-mono text-[10px] text-content-muted hover:text-accent transition-colors">GitHub</a>
+          <a href="#" class="font-mono text-[10px] text-content-muted hover:text-accent transition-colors">Telegram</a>
+          <a href="#" class="font-mono text-[10px] text-content-muted hover:text-accent transition-colors">Contact</a>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // Toggle buttons (terminal/cards, table/scores)
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const group = btn.getAttribute('data-group');
+        const target = btn.getAttribute('data-target');
+
+        // Update button states
+        btn.closest('.flex')?.querySelectorAll('.toggle-btn').forEach(b => {
+          b.classList.remove('text-accent', 'bg-background-tertiary');
+          b.classList.add('text-content-muted');
+        });
+        btn.classList.add('text-accent', 'bg-background-tertiary');
+        btn.classList.remove('text-content-muted');
+
+        // Show/hide panels
+        if (group === 'artifact') {
+          document.getElementById('artifact-terminal')!.classList.toggle('hidden', target !== 'terminal');
+          document.getElementById('artifact-cards')!.classList.toggle('hidden', target !== 'cards');
+        } else if (group === 'bench') {
+          document.getElementById('bench-table')!.classList.toggle('hidden', target !== 'table');
+          document.getElementById('bench-scores')!.classList.toggle('hidden', target !== 'scores');
+        }
+      });
+    });
+
+    // TOC active state on scroll
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const sections = document.querySelectorAll('section[id]');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          tocLinks.forEach(a => {
+            a.classList.remove('text-accent', 'bg-background-secondary');
+            a.classList.add('text-content-muted');
+          });
+          const active = document.querySelector(`.toc-link[href="#${entry.target.id}"]`);
+          if (active) {
+            active.classList.add('text-accent', 'bg-background-secondary');
+            active.classList.remove('text-content-muted');
+          }
+        }
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+  </script>
+</Layout>

@@ -25,6 +25,13 @@
   
   --color-accent: #2DD4BF;
   --color-accent-muted: #1A4A44;
+
+  --color-green: #5DCAA5;
+  --color-green-dim: #0F2A1A;
+  --color-amber: #EF9F27;
+  --color-amber-dim: #2A2010;
+  --color-red: #F09595;
+  --color-red-dim: #2A1010;
   
   --color-border-subtle: #252B35;
   --color-border-default: #2E3540;

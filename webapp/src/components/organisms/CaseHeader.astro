@@ -1,0 +1,30 @@
+---
+import Badge from '../atoms/Badge.astro';
+
+interface Props {
+  caseId: string;
+  badges: { text: string; variant: 'complete' | 'solo' | 'active' | 'research' }[];
+  title: string;
+  chips: { text: string; accent?: boolean }[];
+}
+const { caseId, badges, title, chips } = Astro.props;
+---
+<header class="pt-16 pb-14 border-b border-border-subtle">
+  <div class="font-mono text-[10px] text-content-muted tracking-[0.08em] mb-5">
+    Alex Mercer <span class="mx-1.5">·</span> Case Studies <span class="mx-1.5">·</span> {caseId}
+  </div>
+  <div class="flex items-center gap-3 mb-4">
+    <span class="font-mono text-[11px] text-accent tracking-[0.1em] uppercase">{caseId}</span>
+    {badges.map(b => <Badge text={b.text} variant={b.variant} />)}
+  </div>
+  <h1 class="text-[28px] font-light leading-[1.25] text-content-primary tracking-tight mb-6 max-w-[720px]">
+    {title}
+  </h1>
+  <div class="flex flex-wrap gap-1.5">
+    {chips.map(chip => (
+      <span class:list={["font-mono text-[9px] px-2 py-0.5 rounded-sm tracking-[0.06em] uppercase border", chip.accent ? "border-accent-muted text-accent" : "border-border-default text-content-muted"]}>
+        {chip.text}
+      </span>
+    ))}
+  </div>
+</header>

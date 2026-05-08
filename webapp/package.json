@@ -9,7 +9,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "deploy": "pnpm build && touch dist/.nojekyll && cd dist && git init && git remote add origin git@github.com:kaizin-digital/kaizin-systems-wesite.git && git add . && git commit -m \"deploy: $(date +'%Y-%m-%d %H:%M:%S')\" && git branch -M main && git push -u origin main --force"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",
@@ -18,6 +19,6 @@
     "astro": "^6.3.1",
     "svelte": "^5.55.5",
     "tailwindcss": "^4.2.4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.3.3"
   }
 }

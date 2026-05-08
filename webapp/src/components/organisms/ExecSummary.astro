@@ -1,0 +1,17 @@
+---
+interface Props {
+  items: { key: string; value: string }[];
+}
+const { items } = Astro.props;
+---
+<div class="my-12 p-7 bg-background-secondary border border-border-subtle border-l-[3px] border-l-accent rounded-r-md">
+  <div class="font-mono text-[9px] text-accent tracking-[0.12em] uppercase mb-3.5">Executive Summary</div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+    {items.map(item => (
+      <div>
+        <div class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase mb-1">{item.key}</div>
+        <div class="text-[13px] text-content-secondary leading-relaxed">{item.value}</div>
+      </div>
+    ))}
+  </div>
+</div>
