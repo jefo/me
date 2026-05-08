@@ -58,7 +58,7 @@ import Footer from "../components/organisms/Footer.astro";
       <section id="cases" class="py-20 border-b border-border-subtle">
         <SectionLabel text="Case Studies" />
         <div class="bg-border-subtle border border-border-subtle rounded-md overflow-hidden flex flex-col gap-px">
-          <CaseItem 
+          <CaseItem
             id="CS-001 / AI Systems · Constraint Engineering"
             title="Designing a Constraint-Driven AI Agent for Hardware Specification Validation"
             summary="Built an AI agent that cannot produce a physically invalid hardware configuration. Core challenge: making constraint satisfaction a precondition of generation, not a post-processing filter. Validated against 200 physical assemblies at +32°C ambient."
@@ -70,6 +70,7 @@ import Footer from "../components/organisms/Footer.astro";
               { text: "23/25 benchmark score", outcome: true },
               { text: "±5% thermal accuracy", outcome: true }
             ]}
+            href="/case-studies/pcbo-v2"
           />
           <CaseItem 
             id="CS-002 / Methodology · Process Engineering"

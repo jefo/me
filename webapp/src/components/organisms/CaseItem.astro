@@ -5,10 +5,13 @@ interface Props {
   summary: string;
   chips: { text: string; outcome?: boolean }[];
   disabled?: boolean;
+  href?: string;
 }
-const { id, title, summary, chips, disabled = false } = Astro.props;
+const { id, title, summary, chips, disabled = false, href } = Astro.props;
+const resolvedHref = href ? import.meta.env.BASE_URL.replace(/\/$/, '') + href : undefined;
+const Tag = resolvedHref && !disabled ? 'a' : 'div';
 ---
-<div class:list={["bg-background-secondary p-8 transition-colors border-b border-border-subtle last:border-b-0 group", disabled ? "opacity-50 cursor-default" : "hover:bg-background-tertiary cursor-pointer"]}>
+<Tag href={resolvedHref} class:list={["block bg-background-secondary p-8 transition-colors border-b border-border-subtle last:border-b-0 group", disabled ? "opacity-50 cursor-default" : "hover:bg-background-tertiary cursor-pointer"]}>
   <div class="font-mono text-xs text-content-muted tracking-widest uppercase mb-2">
     {id}
   </div>
@@ -30,5 +33,5 @@ const { id, title, summary, chips, disabled = false } = Astro.props;
       </span>
     ))}
   </div>
-</div>
+</Tag>
 
