@@ -2,10 +2,10 @@
 import StatusDot from "../atoms/StatusDot.svelte";
 import NavLink from "../molecules/NavLink.svelte";
 ---
-<aside class="w-full lg:w-rail flex-shrink-0 p-10 lg:px-7 lg:py-10 border-b lg:border-b-0 lg:border-r border-border-dim sticky top-0 h-auto lg:h-screen overflow-y-auto flex flex-col gap-8 bg-bg z-50">
+<aside class="w-full lg:w-rail flex-shrink-0 p-10 lg:px-8 lg:py-10 border-b lg:border-b-0 lg:border-r border-border-subtle sticky top-0 h-auto lg:h-screen overflow-y-auto flex flex-col gap-10 bg-background-primary z-50">
   <div>
-    <div class="text-sm font-medium tracking-tight text-text-main">Alex Mercer</div>
-    <div class="font-mono text-[10px] text-text-muted mt-1 leading-relaxed">
+    <div class="text-base font-medium tracking-tight text-content-primary">Alex Mercer</div>
+    <div class="font-mono text-xs text-content-muted mt-2 leading-relaxed">
       Systems Architect<br />
       DDD / AI Systems / Knowledge Engineering
     </div>
@@ -15,7 +15,7 @@ import NavLink from "../molecules/NavLink.svelte";
     <StatusDot client:load />
   </div>
 
-  <div class="hidden lg:block h-px bg-border-dim"></div>
+  <div class="hidden lg:block h-px bg-border-subtle"></div>
 
   <nav class="flex flex-row lg:flex-col flex-wrap gap-1 lg:gap-0.5">
     <NavLink href="#systems" active>Systems</NavLink>
@@ -26,20 +26,21 @@ import NavLink from "../molecules/NavLink.svelte";
     <NavLink href="#about">About</NavLink>
   </nav>
 
-  <div class="hidden lg:block h-px bg-border-dim"></div>
+  <div class="hidden lg:block h-px bg-border-subtle"></div>
 
-  <div class="flex flex-row lg:flex-col flex-wrap gap-4 lg:gap-0.5 mt-auto">
-    <a href="#" class="font-mono text-[10px] text-text-muted flex items-center gap-1.5 hover:text-accent group">
-      <span class="opacity-50 group-hover:opacity-100 transition-opacity">↗</span> GitHub
+  <div class="flex flex-row lg:flex-col flex-wrap gap-6 lg:gap-1.5 mt-auto">
+    <a href="#" class="font-mono text-xs text-content-muted flex items-center gap-2 hover:text-accent group transition-colors">
+      <span class="opacity-40 group-hover:opacity-100 transition-opacity">↗</span> GitHub
     </a>
-    <a href="#" class="font-mono text-[10px] text-text-muted flex items-center gap-1.5 hover:text-accent group">
-      <span class="opacity-50 group-hover:opacity-100 transition-opacity">↗</span> Telegram
+    <a href="#" class="font-mono text-xs text-content-muted flex items-center gap-2 hover:text-accent group transition-colors">
+      <span class="opacity-40 group-hover:opacity-100 transition-opacity">↗</span> Telegram
     </a>
-    <a href="#" class="font-mono text-[10px] text-text-muted flex items-center gap-1.5 hover:text-accent group">
-      <span class="opacity-50 group-hover:opacity-100 transition-opacity">↗</span> LinkedIn
+    <a href="#" class="font-mono text-xs text-content-muted flex items-center gap-2 hover:text-accent group transition-colors">
+      <span class="opacity-40 group-hover:opacity-100 transition-opacity">↗</span> LinkedIn
     </a>
-    <a href="#" class="font-mono text-[10px] text-text-muted flex items-center gap-1.5 hover:text-accent group">
-      <span class="opacity-50 group-hover:opacity-100 transition-opacity">↗</span> Email
+    <a href="#" class="font-mono text-xs text-content-muted flex items-center gap-2 hover:text-accent group transition-colors">
+      <span class="opacity-40 group-hover:opacity-100 transition-opacity">↗</span> Email
     </a>
   </div>
 </aside>
+

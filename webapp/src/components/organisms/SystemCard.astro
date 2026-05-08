@@ -10,27 +10,28 @@ interface Props {
 const { type, status, statusText, title, description, stack } = Astro.props;
 
 const statusClasses = {
-  active: "bg-accent-dim text-accent",
+  active: "bg-accent-muted text-accent",
   research: "bg-[#2A2010] text-[#EF9F27]",
   complete: "bg-[#0F2A1A] text-[#5DCAA5]",
 };
 ---
-<div class="bg-surface p-7 transition-colors hover:bg-surface-2 cursor-pointer flex flex-col gap-3 group">
+<div class="bg-background-secondary p-8 transition-colors hover:bg-background-tertiary cursor-pointer flex flex-col gap-4 group">
   <div class="flex items-center justify-between">
-    <span class="font-mono text-[9px] text-text-muted tracking-[0.1em] uppercase">
+    <span class="font-mono text-xs text-content-muted tracking-widest uppercase">
       {type}
     </span>
-    <span class:list={["font-mono text-[9px] px-2 py-0.5 rounded-[2px] tracking-wide uppercase", statusClasses[status]]}>
+    <span class:list={["font-mono text-[10px] px-2 py-0.5 rounded-sm tracking-wide uppercase", statusClasses[status]]}>
       {statusText}
     </span>
   </div>
-  <div class="text-base font-medium text-text-main leading-snug group-hover:text-accent transition-colors">
+  <div class="text-lg font-medium text-content-primary leading-snug group-hover:text-accent transition-colors">
     {title}
   </div>
-  <p class="text-[13px] text-text-dim leading-relaxed flex-1">
+  <p class="text-sm text-content-secondary leading-relaxed flex-1">
     {description}
   </p>
-  <div class="font-mono text-[10px] text-text-muted pt-3 border-t border-border-dim">
+  <div class="font-mono text-xs text-content-muted pt-4 border-t border-border-subtle">
     {stack}
   </div>
 </div>
+

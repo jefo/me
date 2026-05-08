@@ -7,21 +7,22 @@ interface Props {
 }
 const { name, status, description, principles } = Astro.props;
 ---
-<div class="bg-surface p-7 md:p-8 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-3 md:gap-8 items-start transition-colors hover:bg-surface-2 border-b border-border-dim last:border-b-0 group">
+<div class="bg-background-secondary p-8 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-10 items-start transition-colors hover:bg-background-tertiary border-b border-border-subtle last:border-b-0 group">
   <div>
-    <div class="text-sm font-medium text-text-main mb-1 group-hover:text-accent transition-colors">{name}</div>
-    <div class="font-mono text-[9px] text-text-muted tracking-wide uppercase">{status}</div>
+    <div class="text-base font-medium text-content-primary mb-1 group-hover:text-accent transition-colors">{name}</div>
+    <div class="font-mono text-xs text-content-muted tracking-wide uppercase">{status}</div>
   </div>
   <div>
-    <p class="text-[13px] text-text-dim leading-relaxed mb-2.5">
+    <p class="text-sm text-content-secondary leading-relaxed mb-4">
       {description}
     </p>
-    <div class="flex flex-wrap gap-1.5">
+    <div class="flex flex-wrap gap-2">
       {principles.map(p => (
-        <span class="font-mono text-[9px] px-2 py-0.5 rounded-[2px] tracking-wide uppercase border border-border-bright text-text-muted">
+        <span class="font-mono text-xs px-2.5 py-1 rounded-sm tracking-wide uppercase border border-border-default text-content-muted">
           {p}
         </span>
       ))}
     </div>
   </div>
 </div>
+

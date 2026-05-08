@@ -2,16 +2,16 @@
 import Tag from "../atoms/Tag.astro";
 import Stat from "../molecules/Stat.astro";
 ---
-<section id="hero" class="pt-20 pb-20 border-b border-border-dim">
-  <div class="font-mono text-[10px] text-accent tracking-[0.12em] uppercase mb-6">
+<section id="hero" class="pt-20 pb-20 border-b border-border-subtle">
+  <div class="font-mono text-xs text-accent tracking-[0.12em] uppercase mb-6">
     Systems Architecture · Research · Engineering
   </div>
-  <h1 class="text-4xl md:text-[36px] font-light leading-[1.25] text-text-main tracking-tight mb-5 max-w-[640px]">
+  <h1 class="text-4xl font-light leading-tight text-content-primary tracking-tight mb-6 max-w-[640px]">
     Designing architectures, methodologies<br />
-    <span class="text-text-dim italic not-italic">and AI-native systems</span><br />
+    <span class="text-content-secondary italic not-italic">and AI-native systems</span><br />
     for complexity-heavy software domains.
   </h1>
-  <p class="text-[15px] text-text-dim max-w-[560px] leading-relaxed mb-9">
+  <p class="text-base text-content-secondary max-w-[560px] leading-relaxed mb-10">
     Researching domain-driven design, operational architectures,
     context engineering and reproducible software systems.
     Building tooling where complexity demands more than convention.
@@ -27,10 +27,11 @@ import Stat from "../molecules/Stat.astro";
     <Tag text="MBSE" />
   </div>
 
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-border-dim border border-border-dim rounded-md overflow-hidden">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-border-subtle border border-border-subtle rounded-md overflow-hidden">
     <Stat value="6+" label="Years designing systems" />
     <Stat value="3" label="Active frameworks" />
     <Stat value="12+" label="Research areas" />
     <Stat value="∞" label="Constraints modeled" />
   </div>
 </section>
+

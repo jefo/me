@@ -11,15 +11,15 @@ import Footer from "../components/organisms/Footer.astro";
 ---
 
 <Layout>
-  <div class="flex flex-col lg:flex-row min-h-screen max-w-[1400px] mx-auto bg-bg">
+  <div class="flex flex-col lg:flex-row min-h-screen max-w-[1400px] mx-auto bg-background-primary">
     <Sidebar />
 
-    <main class="flex-1 px-6 md:px-[60px] max-w-[860px]">
+    <main class="flex-1 px-8 md:px-12 lg:px-16 max-w-[860px]">
       <Hero />
 
-      <section id="systems" class="py-20 border-b border-border-dim">
+      <section id="systems" class="py-20 border-b border-border-subtle">
         <SectionLabel text="Selected Systems" />
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-px bg-border-dim border border-border-dim rounded-md overflow-hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-px bg-border-subtle border border-border-subtle rounded-md overflow-hidden">
           <SystemCard 
             type="AI Systems / Constraint Solver"
             status="active"
@@ -55,9 +55,9 @@ import Footer from "../components/organisms/Footer.astro";
         </div>
       </section>
 
-      <section id="cases" class="py-20 border-b border-border-dim">
+      <section id="cases" class="py-20 border-b border-border-subtle">
         <SectionLabel text="Case Studies" />
-        <div class="bg-border-dim border border-border-dim rounded-md overflow-hidden flex flex-col gap-px">
+        <div class="bg-border-subtle border border-border-subtle rounded-md overflow-hidden flex flex-col gap-px">
           <CaseItem 
             id="CS-001 / AI Systems · Constraint Engineering"
             title="Designing a Constraint-Driven AI Agent for Hardware Specification Validation"
@@ -83,7 +83,7 @@ import Footer from "../components/organisms/Footer.astro";
         </div>
       </section>
 
-      <section id="research" class="py-20 border-b border-border-dim">
+      <section id="research" class="py-20 border-b border-border-subtle">
         <SectionLabel text="Research & Notes" />
         <div class="flex flex-col">
           <ResearchItem category="AI Systems" title="Why constraint solvers outperform post-generation filters in agentic systems" date="2026-05" />
@@ -95,9 +95,9 @@ import Footer from "../components/organisms/Footer.astro";
         </div>
       </section>
 
-      <section id="frameworks" class="py-20 border-b border-border-dim">
+      <section id="frameworks" class="py-20 border-b border-border-subtle">
         <SectionLabel text="Frameworks & Methodologies" />
-        <div class="bg-border-dim border border-border-dim rounded-md overflow-hidden flex flex-col gap-px">
+        <div class="bg-border-subtle border border-border-subtle rounded-md overflow-hidden flex flex-col gap-px">
           <FrameworkItem 
             name="Constraint-First AI Design"
             status="Active · Applied in PCBO v2"
@@ -119,18 +119,18 @@ import Footer from "../components/organisms/Footer.astro";
         </div>
       </section>
 
-      <section id="writing" class="py-20 border-b border-border-dim">
+      <section id="writing" class="py-20 border-b border-border-subtle">
         <SectionLabel text="Writing" />
-        <div class="p-10 bg-surface border border-border-dim rounded-md text-center">
-          <div class="font-mono text-[10px] text-text-muted tracking-widest uppercase mb-3">Coming Soon</div>
-          <p class="text-[13px] text-text-muted">Long-form engineering writeups. Architecture reviews. Methodology papers.</p>
+        <div class="p-10 bg-background-secondary border border-border-subtle rounded-md text-center">
+          <div class="font-mono text-xs text-content-muted tracking-widest uppercase mb-3">Coming Soon</div>
+          <p class="text-sm text-content-muted">Long-form engineering writeups. Architecture reviews. Methodology papers.</p>
         </div>
       </section>
 
       <section id="about" class="py-20">
         <SectionLabel text="About" />
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-          <div class="text-sm text-text-dim leading-[1.8] space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div class="text-base text-content-secondary leading-loose space-y-6">
             <p>
               I design systems for domains where complexity is the primary constraint.
               My work sits at the intersection of software architecture, domain modeling,
@@ -148,10 +148,10 @@ import Footer from "../components/organisms/Footer.astro";
             </p>
           </div>
 
-          <div class="flex flex-col gap-4">
-            <div class="p-4 md:p-5 bg-surface border border-border-dim rounded-md">
-              <div class="font-mono text-[9px] text-text-muted tracking-widest uppercase mb-2">Research Areas</div>
-              <div class="flex flex-col gap-1 text-[12px] text-text-dim">
+          <div class="flex flex-col gap-6">
+            <div class="p-6 bg-background-secondary border border-border-subtle rounded-md">
+              <div class="font-mono text-xs text-content-muted tracking-widest uppercase mb-4">Research Areas</div>
+              <div class="flex flex-col gap-2 text-sm text-content-secondary">
                 <span>Domain-Driven Design</span>
                 <span>AI Systems Architecture</span>
                 <span>Context Engineering</span>
@@ -160,17 +160,17 @@ import Footer from "../components/organisms/Footer.astro";
                 <span>Software Production Models</span>
               </div>
             </div>
-            <div class="p-4 md:p-5 bg-surface border border-border-dim rounded-md">
-              <div class="font-mono text-[9px] text-text-muted tracking-widest uppercase mb-2">Current Focus</div>
-              <div class="flex flex-col gap-1 text-[12px] text-text-dim">
+            <div class="p-6 bg-background-secondary border border-border-subtle rounded-md">
+              <div class="font-mono text-xs text-content-muted tracking-widest uppercase mb-4">Current Focus</div>
+              <div class="flex flex-col gap-2 text-sm text-content-secondary">
                 <span>Constraint-driven agent design</span>
                 <span>Software Factory framework</span>
                 <span>Architecture meta-models</span>
               </div>
             </div>
-            <div class="p-4 md:p-5 bg-surface border border-border-dim rounded-md">
-              <div class="font-mono text-[9px] text-text-muted tracking-widest uppercase mb-2">Available For</div>
-              <div class="flex flex-col gap-1 text-[12px] text-text-dim">
+            <div class="p-6 bg-background-secondary border border-border-subtle rounded-md">
+              <div class="font-mono text-xs text-content-muted tracking-widest uppercase mb-4">Available For</div>
+              <div class="flex flex-col gap-2 text-sm text-content-secondary">
                 <span>Architecture consulting</span>
                 <span>AI systems design</span>
                 <span>Collaboration on complex domains</span>
@@ -193,16 +193,16 @@ import Footer from "../components/organisms/Footer.astro";
         if (entry.isIntersecting) {
           navLinks.forEach(a => {
             a.classList.remove('text-accent');
-            a.classList.add('text-text-muted');
-            a.classList.add('hover:text-text-main');
-            a.classList.add('hover:bg-surface');
+            a.classList.add('text-content-muted');
+            a.classList.add('hover:text-content-primary');
+            a.classList.add('hover:bg-background-secondary');
           });
           const active = document.querySelector(`aside nav a[href="#${entry.target.id}"]`);
           if (active) {
             active.classList.add('text-accent');
-            active.classList.remove('text-text-muted');
-            active.classList.remove('hover:text-text-main');
-            active.classList.remove('hover:bg-surface');
+            active.classList.remove('text-content-muted');
+            active.classList.remove('hover:text-content-primary');
+            active.classList.remove('hover:bg-background-secondary');
           }
         }
       });
@@ -211,3 +211,4 @@ import Footer from "../components/organisms/Footer.astro";
     sections.forEach(s => observer.observe(s));
   </script>
 </Layout>
+

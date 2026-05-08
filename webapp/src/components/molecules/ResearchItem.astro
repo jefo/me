@@ -6,14 +6,15 @@ interface Props {
 }
 const { category, title, date } = Astro.props;
 ---
-<div class="grid grid-cols-[80px_1fr] md:grid-cols-[100px_1fr_80px] gap-6 items-baseline py-3.5 border-b border-border-dim transition-colors hover:bg-surface/30 group">
-  <span class="font-mono text-[9px] text-accent tracking-wider uppercase">
+<div class="grid grid-cols-[80px_1fr] md:grid-cols-[100px_1fr_80px] gap-6 items-baseline py-4 border-b border-border-subtle transition-colors hover:bg-background-secondary group">
+  <span class="font-mono text-xs text-accent tracking-wider uppercase">
     {category}
   </span>
-  <span class="text-sm text-text-dim transition-colors group-hover:text-text-main">
+  <span class="text-sm text-content-secondary transition-colors group-hover:text-content-primary">
     {title}
   </span>
-  <span class="hidden md:block font-mono text-[10px] text-text-muted text-right">
+  <span class="hidden md:block font-mono text-xs text-content-muted text-right">
     {date}
   </span>
 </div>
+
