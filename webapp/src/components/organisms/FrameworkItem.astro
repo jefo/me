@@ -1,0 +1,27 @@
+---
+interface Props {
+  name: string;
+  status: string;
+  description: string;
+  principles: string[];
+}
+const { name, status, description, principles } = Astro.props;
+---
+<div class="bg-surface p-7 md:p-8 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-3 md:gap-8 items-start transition-colors hover:bg-surface-2 border-b border-border-dim last:border-b-0 group">
+  <div>
+    <div class="text-sm font-medium text-text-main mb-1 group-hover:text-accent transition-colors">{name}</div>
+    <div class="font-mono text-[9px] text-text-muted tracking-wide uppercase">{status}</div>
+  </div>
+  <div>
+    <p class="text-[13px] text-text-dim leading-relaxed mb-2.5">
+      {description}
+    </p>
+    <div class="flex flex-wrap gap-1.5">
+      {principles.map(p => (
+        <span class="font-mono text-[9px] px-2 py-0.5 rounded-[2px] tracking-wide uppercase border border-border-bright text-text-muted">
+          {p}
+        </span>
+      ))}
+    </div>
+  </div>
+</div>

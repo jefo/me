@@ -1,0 +1,213 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Sidebar from "../components/organisms/Sidebar.astro";
+import Hero from "../components/organisms/Hero.astro";
+import SectionLabel from "../components/atoms/SectionLabel.astro";
+import SystemCard from "../components/organisms/SystemCard.astro";
+import CaseItem from "../components/organisms/CaseItem.astro";
+import ResearchItem from "../components/molecules/ResearchItem.astro";
+import FrameworkItem from "../components/organisms/FrameworkItem.astro";
+import Footer from "../components/organisms/Footer.astro";
+---
+
+<Layout>
+  <div class="flex flex-col lg:flex-row min-h-screen max-w-[1400px] mx-auto bg-bg">
+    <Sidebar />
+
+    <main class="flex-1 px-6 md:px-[60px] max-w-[860px]">
+      <Hero />
+
+      <section id="systems" class="py-20 border-b border-border-dim">
+        <SectionLabel text="Selected Systems" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-px bg-border-dim border border-border-dim rounded-md overflow-hidden">
+          <SystemCard 
+            type="AI Systems / Constraint Solver"
+            status="active"
+            statusText="Active"
+            title="PCBO v2 — Hardware Architect"
+            description="Constraint-driven AI agent for hardware specification and validation. Combines LLM reasoning with a deterministic solver — physical constraints are a precondition of output, not a post-processing check."
+            stack="Ontology · Constraint Solver · Decision Artifact · LLM Integration"
+          />
+          <SystemCard 
+            type="Methodology / Operational Framework"
+            status="research"
+            statusText="Research"
+            title="Software Factory"
+            description="Operational framework for designing reproducible software production systems. Formalizes the engineering process as a manufacturing model with defined inputs, transforms and quality gates."
+            stack="DDD · CQRS · MBSE · Process Formalization"
+          />
+          <SystemCard 
+            type="Knowledge Engineering"
+            status="research"
+            statusText="Research"
+            title="Context Engineering Framework"
+            description="Methodology for designing AI context as a first-class architectural artifact. Addresses context fragmentation across multi-domain knowledge workflows."
+            stack="Knowledge Graph · Semantic Modeling · AI-native Patterns"
+          />
+          <SystemCard 
+            type="Architecture / Meta-Model"
+            status="active"
+            statusText="Active"
+            title="Architecture Meta-Models"
+            description="Reusable architectural templates for complexity-heavy domains. Each meta-model encodes a validated pattern: constraints, tradeoffs, operational model and known failure modes."
+            stack="Clean Architecture · Hexagonal · Event-Driven · DDD Patterns"
+          />
+        </div>
+      </section>
+
+      <section id="cases" class="py-20 border-b border-border-dim">
+        <SectionLabel text="Case Studies" />
+        <div class="bg-border-dim border border-border-dim rounded-md overflow-hidden flex flex-col gap-px">
+          <CaseItem 
+            id="CS-001 / AI Systems · Constraint Engineering"
+            title="Designing a Constraint-Driven AI Agent for Hardware Specification Validation"
+            summary="Built an AI agent that cannot produce a physically invalid hardware configuration. Core challenge: making constraint satisfaction a precondition of generation, not a post-processing filter. Validated against 200 physical assemblies at +32°C ambient."
+            chips={[
+              { text: "LLM Integration" },
+              { text: "Constraint Solver" },
+              { text: "Knowledge Graph" },
+              { text: "Deterministic Ontology" },
+              { text: "23/25 benchmark score", outcome: true },
+              { text: "±5% thermal accuracy", outcome: true }
+            ]}
+          />
+          <CaseItem 
+            id="CS-002 / Methodology · Process Engineering"
+            title="Formalizing Software Production as a Reproducible Manufacturing System"
+            summary="Designing next. Operational framework for treating software development as a production system with defined inputs, quality gates, and measurable outputs."
+            chips={[
+              { text: "In Progress" }
+            ]}
+            disabled
+          />
+        </div>
+      </section>
+
+      <section id="research" class="py-20 border-b border-border-dim">
+        <SectionLabel text="Research & Notes" />
+        <div class="flex flex-col">
+          <ResearchItem category="AI Systems" title="Why constraint solvers outperform post-generation filters in agentic systems" date="2026-05" />
+          <ResearchItem category="Architecture" title="Decision artifacts as first-class outputs: making AI reasoning auditable" date="2026-04" />
+          <ResearchItem category="Context Eng." title="Context fragmentation and how bounded contexts apply to LLM prompt design" date="2026-04" />
+          <ResearchItem category="Systems Theory" title="The plausibility trap: confidence without correctness in generative models" date="2026-03" />
+          <ResearchItem category="Modeling" title="Domain ontologies as knowledge graphs: from UML to semantic URI-addressable facts" date="2026-03" />
+          <ResearchItem category="Org. Eng." title="Software factory model: applying manufacturing systems theory to development workflows" date="2026-02" />
+        </div>
+      </section>
+
+      <section id="frameworks" class="py-20 border-b border-border-dim">
+        <SectionLabel text="Frameworks & Methodologies" />
+        <div class="bg-border-dim border border-border-dim rounded-md overflow-hidden flex flex-col gap-px">
+          <FrameworkItem 
+            name="Constraint-First AI Design"
+            status="Active · Applied in PCBO v2"
+            description="Architectural pattern for building AI agents in constraint-heavy domains. Constraints are encoded as validation gates that block generation, not as post-processing checks. Forces the model to satisfy physical or logical reality before producing output. Replicable to any domain with hard rules and verifiable facts."
+            principles={["Generate → Validate → Reject loop", "Deterministic ontology layer", "Decision artifact", "Domain-agnostic pattern"]}
+          />
+          <FrameworkItem 
+            name="Software Factory"
+            status="Research · In Development"
+            description="Operational framework that formalizes software development as a production system. Each development activity is modeled as a transform with defined inputs, quality gates, and measurable outputs. Eliminates ad-hoc process decisions and makes engineering work reproducible across teams and contexts."
+            principles={["DDD", "CQRS", "Process formalization", "Quality gates"]}
+          />
+          <FrameworkItem 
+            name="Context Engineering"
+            status="Research · Early Stage"
+            description="Methodology for treating AI context as a first-class architectural artifact. Context is not a prompt — it is a structured knowledge object with boundaries, versioning, and ownership. Addresses fragmentation in multi-domain AI workflows by applying bounded context patterns from DDD to prompt and memory design."
+            principles={["Bounded contexts", "Knowledge graph", "Semantic modeling", "AI-native patterns"]}
+          />
+        </div>
+      </section>
+
+      <section id="writing" class="py-20 border-b border-border-dim">
+        <SectionLabel text="Writing" />
+        <div class="p-10 bg-surface border border-border-dim rounded-md text-center">
+          <div class="font-mono text-[10px] text-text-muted tracking-widest uppercase mb-3">Coming Soon</div>
+          <p class="text-[13px] text-text-muted">Long-form engineering writeups. Architecture reviews. Methodology papers.</p>
+        </div>
+      </section>
+
+      <section id="about" class="py-20">
+        <SectionLabel text="About" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <div class="text-sm text-text-dim leading-[1.8] space-y-4">
+            <p>
+              I design systems for domains where complexity is the primary constraint.
+              My work sits at the intersection of software architecture, domain modeling,
+              and AI-native engineering — building things where conventional patterns
+              break down and the problem demands a framework before a solution.
+            </p>
+            <p>
+              Currently researching constraint-driven AI agent design, reproducible
+              software production systems, and the application of systems engineering
+              principles to knowledge-heavy domains.
+            </p>
+            <p>
+              I think in architectures. I document in frameworks.
+              I build to prove the concept works — then formalize it so it can be replicated.
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-4">
+            <div class="p-4 md:p-5 bg-surface border border-border-dim rounded-md">
+              <div class="font-mono text-[9px] text-text-muted tracking-widest uppercase mb-2">Research Areas</div>
+              <div class="flex flex-col gap-1 text-[12px] text-text-dim">
+                <span>Domain-Driven Design</span>
+                <span>AI Systems Architecture</span>
+                <span>Context Engineering</span>
+                <span>Knowledge Engineering</span>
+                <span>Organizational Systems</span>
+                <span>Software Production Models</span>
+              </div>
+            </div>
+            <div class="p-4 md:p-5 bg-surface border border-border-dim rounded-md">
+              <div class="font-mono text-[9px] text-text-muted tracking-widest uppercase mb-2">Current Focus</div>
+              <div class="flex flex-col gap-1 text-[12px] text-text-dim">
+                <span>Constraint-driven agent design</span>
+                <span>Software Factory framework</span>
+                <span>Architecture meta-models</span>
+              </div>
+            </div>
+            <div class="p-4 md:p-5 bg-surface border border-border-dim rounded-md">
+              <div class="font-mono text-[9px] text-text-muted tracking-widest uppercase mb-2">Available For</div>
+              <div class="flex flex-col gap-1 text-[12px] text-text-dim">
+                <span>Architecture consulting</span>
+                <span>AI systems design</span>
+                <span>Collaboration on complex domains</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </main>
+  </div>
+
+  <script>
+    const navLinks = document.querySelectorAll('aside nav a');
+    const sections = document.querySelectorAll('section[id]');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navLinks.forEach(a => {
+            a.classList.remove('text-accent');
+            a.classList.add('text-text-muted');
+            a.classList.add('hover:text-text-main');
+            a.classList.add('hover:bg-surface');
+          });
+          const active = document.querySelector(`aside nav a[href="#${entry.target.id}"]`);
+          if (active) {
+            active.classList.add('text-accent');
+            active.classList.remove('text-text-muted');
+            active.classList.remove('hover:text-text-main');
+            active.classList.remove('hover:bg-surface');
+          }
+        }
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+  </script>
+</Layout>

@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --color-bg: #0F1115;
+  --color-surface: #171B22;
+  --color-surface-2: #1B2028;
+  --color-border-dim: #252B35;
+  --color-border-bright: #2E3540;
+  --color-text-main: #E6EAF0;
+  --color-text-dim: #9AA4B2;
+  --color-text-muted: #6B7280;
+  --color-accent: #2DD4BF;
+  --color-accent-dim: #1A4A44;
+
+  --spacing-rail: 240px;
+}
+
+@layer base {
+  html {
+    @apply bg-bg text-text-main font-sans antialiased scroll-smooth;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  body {
+    @apply m-0 p-0;
+  }
+
+  a {
+    @apply transition-colors duration-150;
+  }
+
+  ::selection {
+    @apply bg-accent-dim text-accent;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-bg;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border-bright rounded-sm;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-status-pulse {
+  animation: pulse 3s ease-in-out infinite;
+}
