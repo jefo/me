@@ -72,7 +72,21 @@ import Footer from "../components/organisms/Footer.astro";
             ]}
             href="/case-studies/pcbo-v2"
           />
-          <CaseItem 
+          <CaseItem
+            id="CS-002 / Financial Modeling · TypeScript DSL"
+            title="A Typed Language for Business Models That Cannot Lie"
+            summary="Built a TypeScript DSL where broken financial models fail at compile time, not at month six. Five-level Atomic Design architecture: each level validates its own invariants before the next composes from it. Evidence-bound hypotheses, unit economics as a compile gate, and a deterministic solver for exact breakeven thresholds."
+            chips={[
+              { text: "Atomic Design" },
+              { text: "Compile-time Validation" },
+              { text: "Constraint Solver" },
+              { text: "Reasoning Trace" },
+              { text: "Coffee To Go demo", outcome: true },
+              { text: "v2 architecture", outcome: true }
+            ]}
+            href="/case-studies/bepo-sdk"
+          />
+          <CaseItem
             id="CS-002 / Methodology · Process Engineering"
             title="Formalizing Software Production as a Reproducible Manufacturing System"
             summary="Designing next. Operational framework for treating software development as a production system with defined inputs, quality gates, and measurable outputs."
