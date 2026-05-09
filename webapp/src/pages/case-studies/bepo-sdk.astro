@@ -1,0 +1,648 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SectionLabel from '../../components/atoms/SectionLabel.astro';
+import CaseSidebar from '../../components/organisms/CaseSidebar.astro';
+import CaseHeader from '../../components/organisms/CaseHeader.astro';
+import ExecSummary from '../../components/organisms/ExecSummary.astro';
+import ConstraintList from '../../components/organisms/ConstraintList.astro';
+import FlowDiagram from '../../components/organisms/FlowDiagram.astro';
+import LayerCard from '../../components/organisms/LayerCard.astro';
+import DecisionCard from '../../components/organisms/DecisionCard.astro';
+import BenchmarkTable from '../../components/organisms/BenchmarkTable.astro';
+import LessonItem from '../../components/organisms/LessonItem.astro';
+import ReplicateItem from '../../components/organisms/ReplicateItem.astro';
+
+const toc = [
+  { href: '#problem', text: 'Problem Space' },
+  { href: '#constraints', text: 'Constraints' },
+  { href: '#why-dsl', text: 'Why a DSL' },
+  { href: '#architecture', text: 'Architecture' },
+  { href: '#mechanisms', text: 'Key Mechanisms' },
+  { href: '#revenue-model', text: 'Revenue Model' },
+  { href: '#marketing-binding', text: 'Marketing Binding' },
+  { href: '#templates', text: 'Templates' },
+  { href: '#demo', text: 'Demo' },
+  { href: '#adr', text: 'ADR-001' },
+  { href: '#replicability', text: 'Replicability' },
+];
+
+const meta = [
+  { label: 'Type', value: 'Solo End-to-End' },
+  { label: 'Domain', value: 'Financial Modeling' },
+  { label: 'Architecture', value: 'Atomic Design DSL' },
+  { label: 'Key Pattern', value: 'Compile-time Validation' },
+  { label: 'Status', value: 'v2 In Development', accent: true },
+];
+
+const execItems = [
+  { key: 'Domain', value: 'Financial modeling for decision-making under uncertainty' },
+  { key: 'Core Problem', value: 'Financial models that look correct but cannot verify themselves' },
+  { key: 'Architecture', value: 'TypeScript DSL with compile-time validation and deterministic solver' },
+  { key: 'Key Mechanism', value: 'Constraints as build-time contracts — broken models fail before simulation' },
+  { key: 'Demo Model', value: 'Coffee To Go: 3 SKUs, 2 staff, 24-month simulation, 3 scenarios' },
+  { key: 'Status', value: 'v1 in production · v2 (Atomic Design architecture) in development' },
+];
+
+const constraints = [
+  { num: '01', html: 'Every number must have a <strong>source</strong>. A hypothesis without evidence is a guess. Every input must carry provenance — where it came from, and how confident we are. A number without <code class="font-mono text-[11px] text-accent">Evidence</code> must not compile.' },
+  { num: '02', html: 'Broken unit economics must <strong>fail at build time</strong>, not at month 6. If contribution margin is negative, the model must refuse to run. Not warn. Refuse. The error must surface before simulation, not inside it.' },
+  { num: '03', html: 'Capacity is a <strong>physical constraint</strong>, not an assumption. A model that promises 73 orders when a founder can physically complete 48 is not conservative — it is wrong. Resource limits must be encoded and enforced.' },
+  { num: '04', html: 'The solver must find <strong>exact values</strong>, not approximations. "Approximately 50 orders" is not an answer when signing a procurement order. The breakeven threshold must be a precise number, found deterministically.' },
+  { num: '05', html: 'Every calculation step must be <strong>reproducible</strong>. An inspector, investor, or auditor must be able to trace every output number back to the assumption that produced it. Black-box results are not auditable results.' },
+  { num: '06', html: 'The architecture must be <strong>domain-agnostic</strong>. The primitives that model a coffee shop must be the same primitives that model a manufacturing line or an M&A acquisition. The engine must not know what "coffee" is.' },
+];
+
+const architectureNodes = [
+  { label: 'Atoms', sub: 'Rate, Money, Evidence', accent: true },
+  { label: 'Molecules', sub: 'ExpensePool, DriverChain', accent: true },
+  { label: 'Organisms', sub: 'Phase, RevenueModel', accent: true },
+  { label: 'Templates', sub: 'RetailPoint, SoloFounder', accent: true },
+  { label: 'Pages', sub: 'coffeeToGo.ts, carwash.ts' },
+];
+
+const layerCards = [
+  { label: 'Level 1 — Atoms', title: 'Immutable Value Objects', description: 'Rate, Money, Duration, Evidence, Hypothesis. Invariant checked at construction: Rate.of(-1) throws. These are the irreducible primitives — every level above inherits their guarantees.' },
+  { label: 'Level 2 — Molecules', title: 'Composed Atoms with Structural Validation', description: 'ExpensePool, DriverChain, RevenueStreamPool. Invariant: shares must sum to 1.0. At least one expense required. .build() returns T or throws — there are no warnings at the structural level, only mathematical validity or invalidity.' },
+  { label: 'Level 3 — Organisms', title: 'Full Business Components with Domain Rules', description: 'Phase, Operations, RevenueModel, MarketingEngine. Invariant: contributionMargin > 0. Capacity coverage enforced. .build() returns BuildResult<T> — errors throw, risks go to warnings[].' },
+  { label: 'Level 4 — Templates', title: 'Parameterized Business Patterns', description: 'SoloFounder, RetailPoint, ServiceWithMarketing. .configure(props) returns Builder. Builder.build() returns BuildResult<BusinessModel>. Builder.fork(overrides) returns new Builder from merged props — no cloning.' },
+  { label: 'Level 5 — Pages', title: 'Concrete Models with Real Hypotheses', description: 'coffeeToGo.ts, carwash.ts. Data only. No business logic. The page declares hypotheses, composes templates, and runs simulation. Every level below has already been validated.' },
+];
+
+const decisions = [
+  { num: '01', title: 'Fork semantics — operate on Builder props, not class instances', reason: 'Deep-cloning TypeScript class instances breaks prototypes and violates immutability. A fork re-assembles from configuration — the resulting object is always freshly validated from atoms up.', tradeoff: 'Every fork re-runs full validation. Computationally more expensive than cloning, but correctness is the point — a cloned model that skipped validation would defeat the architecture.', rejected: 'Object.assign / structuredClone on assembled instances → prototype chain corruption, silent immutability violations' },
+  { num: '02', title: 'Build contract — BuildResult<T> envelope at Organism level and above', reason: 'Domain objects must not carry diagnostic state. Atoms and Molecules throw on invariant violation — there are no warnings at the structural level. Organisms and Templates return { value, warnings } to separate business risks from structural errors.', tradeoff: 'Two different return contracts (throw vs. envelope). But the boundary is clear: structural = throw, business risk = warning. This distinction is load-bearing — it tells the operator what kind of problem they have.', rejected: 'Unified Result<T, E> everywhere → structural errors become handle-able when they should be non-recoverable' },
+  { num: '03', title: 'Marketing → Revenue binding is explicit and immutable', reason: 'MarketingEngine produces an immutable Driver. That Driver is explicitly passed to RevenueModel at Phase assembly time. No mutation. No implicit coupling. Missing binding → Warning in the envelope, not a silent fallback.', tradeoff: 'Requires the model author to explicitly wire marketing output to revenue input. This is deliberate — implicit wiring is the source of the spreadsheet errors the system exists to prevent.', rejected: 'Implicit coupling via shared mutable state → the Excel pattern the architecture is designed to eliminate' },
+  { num: '04', title: 'Registry deferred — ES module imports provide better type safety', reason: 'As a TypeScript library for developers, ES module imports provide superior type safety and tree-shaking compared to string-keyed registry access. Registry becomes relevant only if a no-code editor is added — at which point it is justified by concrete requirements.', tradeoff: 'No runtime discoverability of templates. But discoverability for developers comes from IDE autocomplete on named exports — which is strictly better than string-keyed lookup.', rejected: 'BepoRegistry with string-keyed template lookup → worse type safety, no tree-shaking, premature abstraction without a consumer' },
+];
+
+const demoRows = [
+  { name: 'BASE', score: '+462,900₽', scoreColor: 'text-accent', thermal: 'Month 8', thermalColor: 'text-accent', compatibility: 'None', compatColor: 'text-green', trace: '54.2/day', traceColor: 'text-content-secondary', notes: 'Baseline configuration · 70 customers/day', highlight: true },
+  { name: 'OPTIMISTIC', score: '+631,200₽', scoreColor: 'text-accent', thermal: 'Month 6', thermalColor: 'text-green', compatibility: 'None', compatColor: 'text-green', trace: '48.1/day', traceColor: 'text-content-secondary', notes: '+15% pricing across all SKUs · 70 customers/day' },
+  { name: 'PESSIMISTIC', score: '+187,400₽', scoreColor: 'text-amber', thermal: 'Month 14', thermalColor: 'text-amber', compatibility: 'Months 3–5 (89,000₽)', compatColor: 'text-red', trace: '63.7/day', traceColor: 'text-content-secondary', notes: '−15% pricing · Crisis depth: −89,000₽ at month 5' },
+];
+
+const lessons = [
+  { num: '01', title: 'The validation hierarchy is the architecture — not a feature on top', body: 'Each level inherits the validation of every level below it. A Template that composes broken Molecules cannot build. This is not defensive programming — it is the architecture. The property that makes the system reliable is not any individual check but the fact that no check can be bypassed from above. A broken atom poisons every structure that touches it.' },
+  { num: '02', title: 'BuildResult as an envelope keeps domain objects clean', body: 'In v1, warnings were fields on domain objects — Phase had a warnings[] array, which meant domain logic and diagnostic state were mixed. v2 separates them: domain objects carry only business data. Diagnostics live in the BuildResult envelope. The separation means domain methods never need to check "am I in a warning state?" before computing.' },
+  { num: '03', title: 'The engine must not know the domain — and that is the hardest design constraint', body: 'Driver.valueForMonth() returns a number. It does not know what "coffee" is. ExpensePool sums items. It does not know what "rent" is. Solver.findMinimum() runs binary search. It does not know what "breakeven" means. This agnosticism is deliberate and difficult — every time a convenience method was tempting ("getCoffeeShopMetrics()"), it was rejected. The engine that knows coffee is useless for manufacturing.' },
+];
+
+const replicability = [
+  { domain: 'Due Diligence', description: 'Input seller claimed figures as Hypothesis entries with SourceType: HISTORICAL_DATA. Run PESSIMISTIC. Find the traffic level at which the business fails to service its debt. Buy with that number, not without it.' },
+  { domain: 'CFO Leak Detection', description: 'Decompose variable expenses to component level. Solver runs sensitivity analysis: if logistics drops by 30₽/order, breakeven shifts from 52 to 41 units. The CFO sees the value of optimization in the same units as the decision.' },
+  { domain: 'Investor Preparation', description: 'Three scenarios. Reasoning trace for every number. Solver output: survival threshold. The founder arrives at the meeting with a mathematical argument, not a presentation.' },
+  { domain: 'Multi-Phase Valuation', description: 'Three phases: current state → scaling → stabilization. Each phase has independent drivers, expenses, capacity. Cumulative cash flow across phases, with scenario variance on discount rate.' },
+];
+---
+
+<Layout title="CS-002 — BEPO SDK: Financial Modeling DSL · Eugene Kaizin">
+  <div class="flex flex-col lg:flex-row min-h-screen max-w-[1400px] mx-auto bg-background-primary">
+    <CaseSidebar
+      caseId="CS-002 / Financial Modeling"
+      title="BEPO SDK — A Typed Language for Business Models That Cannot Lie"
+      status="In Development"
+      toc={toc}
+      meta={meta}
+    />
+
+    <main class="flex-1 px-8 md:px-16 lg:px-16 max-w-[900px]">
+      <CaseHeader
+        caseId="CS-002"
+        badges={[{ text: 'In Development', variant: 'active' }, { text: 'Solo', variant: 'solo' }]}
+        title="A Typed Language for Business Models That Cannot Lie"
+        chips={[
+          { text: 'Financial Modeling' },
+          { text: 'TypeScript DSL' },
+          { text: 'Atomic Design' },
+          { text: 'Compile-time Validation' },
+          { text: 'Constraint Solver' },
+          { text: 'Deterministic Simulation' },
+          { text: 'Open Source' },
+          { text: 'v2 architecture', accent: true },
+        ]}
+      />
+
+      <ExecSummary items={execItems} />
+
+      <!-- Problem -->
+      <section id="problem" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Problem Space" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">The Plausibility Trap</h2>
+
+        <p class="text-sm text-content-secondary leading-relaxed mb-4">
+          There is a specific failure mode in financial modeling more dangerous than an obvious error. It is a model that produces a number — a confident, formatted, plausible number — without checking whether that number is consistent with the assumptions it was built on. Call it the <em class="text-content-primary not-italic">Plausibility Trap</em>.
+        </p>
+
+        <h3 class="text-sm font-medium text-content-primary mb-3 mt-6">How it happens today</h3>
+
+        <div class="flex flex-col gap-3 mb-4">
+          <div class="p-4 bg-background-secondary border border-border-subtle rounded-md">
+            <div class="font-mono text-[9px] text-accent tracking-[0.1em] uppercase mb-1.5">The Excel method</div>
+            <div class="text-[13px] text-content-secondary leading-relaxed">A founder builds a business plan in Google Sheets. Expenses are a flat line labeled "other: 50,000₽." Fixed and variable costs are not separated. When order volume grows from 10 to 70, variable costs stay flat. The model shows profit. The business runs at a loss. <span class="text-content-primary">The error is invisible because Excel doesn't know what a variable cost is — it only knows what number is in the cell.</span></div>
+          </div>
+          <div class="p-4 bg-background-secondary border border-border-subtle rounded-md">
+            <div class="font-mono text-[9px] text-accent tracking-[0.1em] uppercase mb-1.5">The template method</div>
+            <div class="text-[13px] text-content-secondary leading-relaxed">A downloaded business plan template. 80% of cells are irrelevant to this business. The remaining 20% are filled in by intuition. An inspector sees a formatted table — and no justification for a single number in it.</div>
+          </div>
+          <div class="p-4 bg-background-secondary border border-border-subtle rounded-md">
+            <div class="font-mono text-[9px] text-accent tracking-[0.1em] uppercase mb-1.5">The vanilla AI method</div>
+            <div class="text-[13px] text-content-secondary leading-relaxed">ChatGPT produces a structured business plan. Revenue grows each month. Variable costs stay flat as volume scales. Margin in the model: 80%. Margin in the business: 12%. <span class="text-content-primary">The model is internally inconsistent — and nothing in the generation process checks for that.</span></div>
+          </div>
+        </div>
+
+        <h3 class="text-sm font-medium text-content-primary mb-3 mt-6">The cost of a model that cannot verify itself</h3>
+
+        <div class="flex flex-col gap-2 text-[13px] text-content-secondary leading-relaxed">
+          <p>A founder invests a 350,000₽ grant into a business where contribution margin is negative. The model never showed this because expenses were one line.</p>
+          <p>A plan for a social contract grant is rejected. The inspector couldn't trace a single number to a source. The model had no provenance.</p>
+          <p>A business is acquired for 8M₽. Six months later: 60% of revenue was one client who left. A PESSIMISTIC scenario simulation would have shown the risk before signing.</p>
+          <p>A founder plans 73 orders per month. Physically possible at 160 working hours at 3.3 hours per order: 48. <span class="text-content-primary">The capacity breach was never modeled.</span></p>
+        </div>
+
+        <p class="text-sm text-content-primary font-medium leading-relaxed mt-4"><strong>The common root:</strong> a model that accepts any input and produces output without verifying the internal consistency of its own assumptions.</p>
+      </section>
+
+      <!-- Constraints -->
+      <section id="constraints" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Design Constraints" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">Boundaries established before implementation</h2>
+        <p class="text-sm text-content-secondary leading-relaxed mb-6">
+          Before writing a line of code, I established what a valid solution must satisfy. These constraints shaped every architectural decision that followed.
+        </p>
+        <ConstraintList constraints={constraints} />
+      </section>
+
+      <!-- Why a DSL -->
+      <section id="why-dsl" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Architecture Rationale" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">Why a DSL, not a tool</h2>
+        <p class="text-sm text-content-secondary leading-relaxed mb-4">
+          The standard answer to "Excel is bad for financial modeling" is a SaaS application — a form-based UI that guides the user through inputs and produces a report. That is the wrong abstraction for this problem.
+        </p>
+        <p class="text-sm text-content-secondary leading-relaxed mb-4">
+          A form-based tool encodes <em class="text-content-primary not-italic">one model</em> of how a business works. It handles the cases its designer anticipated. It fails on everything else. A DSL encodes the <em class="text-content-primary not-italic">rules</em> of financial modeling, not the models themselves. Users compose from primitives. The system validates composition, not content.
+        </p>
+
+        <div class="mt-6 border border-border-subtle rounded-md overflow-hidden">
+          <table class="w-full border-collapse text-[13px]">
+            <thead>
+              <tr class="border-b border-border-default">
+                <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-left font-normal">Approach</th>
+                <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-left font-normal">Stores</th>
+                <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-left font-normal">Validation</th>
+                <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-left font-normal">Composition</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-border-subtle">
+                <td class="px-4 py-3 text-content-secondary font-medium">Excel</td>
+                <td class="px-4 py-3 text-content-muted">Numbers</td>
+                <td class="px-4 py-3 text-red font-mono text-[11px]">None</td>
+                <td class="px-4 py-3 text-content-muted">None</td>
+              </tr>
+              <tr class="border-b border-border-subtle">
+                <td class="px-4 py-3 text-content-secondary font-medium">SaaS tool</td>
+                <td class="px-4 py-3 text-content-muted">One model</td>
+                <td class="px-4 py-3 text-amber font-mono text-[11px]">Partial</td>
+                <td class="px-4 py-3 text-content-muted">None</td>
+              </tr>
+              <tr class="border-b border-border-subtle">
+                <td class="px-4 py-3 text-content-secondary font-medium">Vanilla LLM</td>
+                <td class="px-4 py-3 text-content-muted">Plausible structure</td>
+                <td class="px-4 py-3 text-red font-mono text-[11px]">None</td>
+                <td class="px-4 py-3 text-content-muted">None</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3 text-accent font-medium border-l-2 border-l-accent bg-background-secondary">BEPO SDK</td>
+                <td class="px-4 py-3 text-content-secondary bg-background-secondary">Rules</td>
+                <td class="px-4 py-3 text-green font-mono text-[11px] bg-background-secondary">Build time</td>
+                <td class="px-4 py-3 text-green font-mono text-[11px] bg-background-secondary">Primitives</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="text-sm text-content-primary font-medium leading-relaxed mt-5">The SDK is a TypeScript library. A model is code. Code compiles — or it doesn't. That property is the entire point.</p>
+      </section>
+
+      <!-- Architecture -->
+      <section id="architecture" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Architecture" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">Atomic Design for Financial Modeling</h2>
+        <p class="text-sm text-content-secondary leading-relaxed mb-7">
+          BEPO v2 is organized as a five-level hierarchy where each level validates its own invariants before the next level can compose from it. A broken atom cannot become a valid molecule. A molecule with negative margin cannot become a valid organism. A model cannot simulate if it hasn't passed every level of validation below it.
+        </p>
+
+        <FlowDiagram nodes={architectureNodes} />
+
+        <div class="mt-7 flex flex-col gap-4">
+          {layerCards.map(card => <LayerCard {...card} />)}
+        </div>
+
+        <!-- Validation contract -->
+        <div class="mt-7 p-5 bg-background-secondary border border-border-subtle rounded-md">
+          <div class="font-mono text-[9px] text-content-muted tracking-[0.1em] uppercase mb-3">Validation Contract</div>
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-[13px]">
+              <thead>
+                <tr class="border-b border-border-default">
+                  <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-3 py-2 text-left font-normal">Level</th>
+                  <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-3 py-2 text-left font-normal">Checks</th>
+                  <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-3 py-2 text-left font-normal">When</th>
+                  <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-3 py-2 text-left font-normal">Returns</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-border-subtle"><td class="px-3 py-2.5 font-mono text-[11px] text-accent">Atom</td><td class="px-3 py-2.5 text-content-muted text-xs">Own invariant (≥ 0, not null)</td><td class="px-3 py-2.5 text-content-muted text-xs">Construction</td><td class="px-3 py-2.5 font-mono text-[11px] text-content-secondary">T or throw</td></tr>
+                <tr class="border-b border-border-subtle"><td class="px-3 py-2.5 font-mono text-[11px] text-accent">Molecule</td><td class="px-3 py-2.5 text-content-muted text-xs">Structural (sum = 1.0)</td><td class="px-3 py-2.5 text-content-muted text-xs">.build()</td><td class="px-3 py-2.5 font-mono text-[11px] text-content-secondary">T or throw</td></tr>
+                <tr class="border-b border-border-subtle"><td class="px-3 py-2.5 font-mono text-[11px] text-accent">Organism</td><td class="px-3 py-2.5 text-content-muted text-xs">Business rule (margin &gt; 0)</td><td class="px-3 py-2.5 text-content-muted text-xs">.build()</td><td class="px-3 py-2.5 font-mono text-[11px] text-content-secondary">BuildResult&lt;T&gt;</td></tr>
+                <tr><td class="px-3 py-2.5 font-mono text-[11px] text-accent">Template</td><td class="px-3 py-2.5 text-content-muted text-xs">Structural completeness</td><td class="px-3 py-2.5 text-content-muted text-xs">.build()</td><td class="px-3 py-2.5 font-mono text-[11px] text-content-secondary">BuildResult&lt;T&gt;</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="text-xs text-content-muted mt-3 leading-relaxed">Molecules don't use the <code class="font-mono text-[11px] text-accent">BuildResult</code> envelope — there are no business warnings at the structural level, only mathematical validity or invalidity. Organisms and above produce warnings: <code class="font-mono text-[11px] text-amber">SHORT_RUNWAY</code>, <code class="font-mono text-[11px] text-amber">LOW_CONFIDENCE</code>, <code class="font-mono text-[11px] text-amber">NO_MARKETING_BINDING</code>. Domain objects stay clean. Diagnostics live in the envelope.</p>
+        </div>
+      </section>
+
+      <!-- Key Mechanisms -->
+      <section id="mechanisms" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Key Mechanisms" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">Five mechanisms that make the system reliable</h2>
+
+        <div class="flex flex-col gap-10">
+
+          <!-- Mechanism 1: Evidence-Bound Hypotheses -->
+          <div>
+            <div class="flex items-baseline gap-3 mb-3">
+              <span class="font-mono text-[22px] font-medium text-border-default leading-none">1</span>
+              <h3 class="text-sm font-medium text-content-primary">Evidence-Bound Hypotheses</h3>
+            </div>
+            <p class="text-[13px] text-content-secondary leading-relaxed mb-3">
+              Every input to a model is a <code class="font-mono text-[11px] text-accent">Hypothesis</code>. A Hypothesis carries: the value, <code class="font-mono text-[11px] text-accent">SourceType</code> (MARKET_RESEARCH, BENCHMARK, HISTORICAL_DATA, EXPERT_GUESS), <code class="font-mono text-[11px] text-accent">Confidence</code> (LOW, MEDIUM, HIGH), and optionally a URL or document reference.
+            </p>
+            <p class="text-[13px] text-content-secondary leading-relaxed mb-3">
+              A <code class="font-mono text-[11px] text-accent">FixedDriver</code> without evidence does not compile. The system cannot be given a number without being told where it came from. This is not metadata — it is part of the model's validity contract.
+            </p>
+            <p class="text-[13px] text-content-secondary leading-relaxed">
+              The reasoning trace output shows: <span class="text-content-primary">"Traffic = 3 (constant, source: MARKET_RESEARCH, confidence: MEDIUM)."</span> An inspector reviewing a grant application sees not just the number, but its provenance.
+            </p>
+          </div>
+
+          <!-- Mechanism 2: Unit Economics as Compile Gate -->
+          <div>
+            <div class="flex items-baseline gap-3 mb-3">
+              <span class="font-mono text-[22px] font-medium text-border-default leading-none">2</span>
+              <h3 class="text-sm font-medium text-content-primary">Unit Economics as a Compile Gate</h3>
+            </div>
+            <p class="text-[13px] text-content-secondary leading-relaxed mb-4">
+              If the contribution margin is negative — if variable cost per unit exceeds ticket size — the model must refuse to run. Not warn. Refuse. The error must surface before simulation, not inside it.
+            </p>
+            <div class="bg-[#0a0d11] border border-border-subtle rounded-md overflow-hidden">
+              <div class="flex items-center gap-2 px-4 py-2 border-b border-border-subtle bg-background-secondary">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#3a2020]"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#3a3020]"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#1a3020]"></span>
+                <span class="font-mono text-[10px] text-content-muted ml-2">PhaseBuilder.build()</span>
+              </div>
+              <div class="p-5 font-mono text-[11px] leading-[1.8] overflow-x-auto">
+                <span class="text-content-muted">class PhaseBuilder {'{'}</span>
+                <span class="block pl-4 text-content-muted">build(): BuildResult&lt;Phase&gt; {'{'}</span>
+                <span class="block pl-8 text-content-secondary">const phase = new Phase(this.expensePool, this.revenueModel, ...);</span>
+                <span class="block pl-8 mt-1 text-content-muted">// Business invariant — blocks simulation</span>
+                <span class="block pl-8"><span class="text-red">if</span> <span class="text-content-secondary">(phase.calculateContributionMargin() &lt;= 0) {'{'}</span></span>
+                <span class="block pl-12"><span class="text-red">throw</span> <span class="text-content-secondary">new UnitEconomicsError(</span></span>
+                <span class="block pl-16 text-content-muted">'Contribution margin is negative: variable cost per unit exceeds ticket size.'</span>
+                <span class="block pl-12 text-content-secondary">);</span>
+                <span class="block pl-8 text-content-secondary">{'}'}</span>
+                <span class="block pl-8 mt-1 text-content-muted">// Business risks — allow simulation, surface in warnings</span>
+                <span class="block pl-8 text-content-secondary">const warnings = this.scanForRisks(phase);</span>
+                <span class="block pl-8 text-accent">return</span> <span class="text-content-secondary">{'{'} value: phase, warnings {'}'}</span>;
+                <span class="block pl-4 text-content-secondary">{'}'}</span>
+                <span class="text-content-secondary">{'}'}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mechanism 3: Deterministic Solver -->
+          <div>
+            <div class="flex items-baseline gap-3 mb-3">
+              <span class="font-mono text-[22px] font-medium text-border-default leading-none">3</span>
+              <h3 class="text-sm font-medium text-content-primary">Deterministic Solver — Binary Search for Breakeven</h3>
+            </div>
+            <p class="text-[13px] text-content-secondary leading-relaxed">
+              The Solver finds the minimum driver value at which the business becomes viable — not through intuition, not through manual iteration, but through binary search with precision to 0.01. The answer to "how many orders do I need to break even" is not "around 50." It is "52.4 orders per day — the threshold below which cash crisis is inevitable, accounting for capacity constraints and the current expense structure."
+            </p>
+          </div>
+
+          <!-- Mechanism 4: Capacity-Aware Simulation -->
+          <div>
+            <div class="flex items-baseline gap-3 mb-3">
+              <span class="font-mono text-[22px] font-medium text-border-default leading-none">4</span>
+              <h3 class="text-sm font-medium text-content-primary">Capacity-Aware Simulation</h3>
+            </div>
+            <p class="text-[13px] text-content-secondary leading-relaxed">
+              Resources — founder time, equipment, staff — have hard limits in hours. When demand exceeds physical supply, the simulation throws <code class="font-mono text-[11px] text-red">CapacityBreachError</code>. This is not a warning. A model that promises output its resources cannot produce is not a conservative model — it is an incorrect one. The <code class="font-mono text-[11px] text-accent">CapacityPool</code> validates that for every month of the simulation, the sum of <code class="font-mono text-[11px] text-accent">demandHours</code> across all service units does not exceed <code class="font-mono text-[11px] text-accent">supplyHours</code> across all resources. If it does — the simulation stops.
+            </p>
+          </div>
+
+          <!-- Mechanism 5: Reasoning Trace -->
+          <div>
+            <div class="flex items-baseline gap-3 mb-3">
+              <span class="font-mono text-[22px] font-medium text-border-default leading-none">5</span>
+              <h3 class="text-sm font-medium text-content-primary">Reasoning Trace</h3>
+            </div>
+            <p class="text-[13px] text-content-secondary leading-relaxed mb-4">
+              Every calculation step is recorded. The trace is not a debug log — it is a deliverable. An investor, an inspector, or an auditor receives not a number but a complete derivation of how every number in the model was produced.
+            </p>
+            <div class="bg-[#0a0d11] border border-border-subtle rounded-md overflow-hidden">
+              <div class="flex items-center gap-2 px-4 py-2 border-b border-border-subtle bg-background-secondary">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#3a2020]"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#3a3020]"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-[#1a3020]"></span>
+                <span class="font-mono text-[10px] text-content-muted ml-2">reasoning_trace.log — month 3</span>
+              </div>
+              <div class="p-5 font-mono text-[11px] leading-[1.9] overflow-x-auto">
+                <span class="text-content-muted">Month 3: Traffic</span>
+                <span class="block pl-4 text-content-muted">= RampUp(month=3, duration=6) × Seasonal(coefficient=1.1)</span>
+                <span class="block pl-4 text-content-muted">= (3/6 × base(3)) × 1.1</span>
+                <span class="block pl-4 text-content-muted">= 1.5 × 3 × 1.1</span>
+                <span class="block pl-4 text-accent">= 4.95 orders/day</span>
+                <span class="block text-content-muted mt-1">Source: MARKET_RESEARCH · Confidence: MEDIUM</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Unified Revenue Model -->
+      <section id="revenue-model" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Architecture Decision" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">Unified Revenue Model</h2>
+        <p class="text-sm text-content-secondary leading-relaxed mb-4">
+          v1 had two parallel calculation paths inside <code class="font-mono text-[11px] text-accent">Phase.calculateMonth()</code>: the legacy funnel (traffic × conversion × ticket) and the operational model (CapacityPool). This was duplication — and a source of inconsistency when models grew complex.
+        </p>
+        <p class="text-sm text-content-secondary leading-relaxed mb-5">
+          v2 unifies them behind a single interface. <code class="font-mono text-[11px] text-accent">Phase</code> no longer knows which mode is active. It delegates to <code class="font-mono text-[11px] text-accent">RevenueModel</code>. The calculation path is an implementation detail of the revenue organism.
+        </p>
+
+        <div class="flex flex-col gap-3">
+          <LayerCard
+            label="SimpleMode"
+            title="traffic × conversion × ticketSize"
+            description="For quick estimates, MVP models. The simplest valid revenue calculation — three multiplied drivers producing orders and revenue."
+          />
+          <LayerCard
+            label="DetailedMode"
+            title="RevenueStreamPool with SKU mix"
+            description="For coffee shops, retail, multi-product businesses. Each SKU has a share of total orders, an individual price, and a per-unit variable cost. Shares must sum to 1.0."
+          />
+          <LayerCard
+            label="CapacityMode"
+            title="CapacityPool with Demand[]"
+            description="For service businesses, manufacturing, carwashes. Revenue is bounded by physical capacity — demand hours per service unit cannot exceed supply hours across resources."
+          />
+        </div>
+      </section>
+
+      <!-- Marketing → Revenue Binding -->
+      <section id="marketing-binding" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Architecture Decision" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">Marketing → Revenue Binding</h2>
+        <p class="text-sm text-content-secondary leading-relaxed mb-4">
+          In v1, marketing drivers were often attached as mutations to existing model state. In v2, all organisms are immutable. The binding is explicit and happens at build time.
+        </p>
+
+        <div class="bg-[#0a0d11] border border-border-subtle rounded-md overflow-hidden mb-4">
+          <div class="flex items-center gap-2 px-4 py-2 border-b border-border-subtle bg-background-secondary">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#3a2020]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#3a3020]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#1a3020]"></span>
+            <span class="font-mono text-[10px] text-content-muted ml-2">Phase assembly</span>
+          </div>
+          <div class="p-5 font-mono text-[11px] leading-[1.8] overflow-x-auto">
+            <span class="text-content-muted">// 1. Build the marketing organism</span>
+            <span class="block text-content-secondary">const {'{'} value: marketing {'}'} = MarketingEngine.create({'{'} channels, budget {'}'}).build();</span>
+            <span class="block mt-1 text-content-muted">// 2. Extract the aggregated traffic driver — immutable</span>
+            <span class="block text-content-secondary">const trafficDriver = marketing.getAggregatedTrafficDriver();</span>
+            <span class="block mt-1 text-content-muted">// 3. Pass explicitly into the revenue model</span>
+            <span class="block text-content-secondary">const {'{'} value: revenue {'}'} = RevenueModel.create(SimpleMode)</span>
+            <span class="block pl-8 text-content-secondary">.withTraffic(trafficDriver)</span>
+            <span class="block pl-8 text-content-secondary">.withTicketSize(ticketPrice)</span>
+            <span class="block pl-8 text-content-secondary">.build();</span>
+          </div>
+        </div>
+
+        <p class="text-[13px] text-content-secondary leading-relaxed">
+          If <code class="font-mono text-[11px] text-accent">withTraffic()</code> is not called on a Phase that includes a MarketingEngine, <code class="font-mono text-[11px] text-accent">Phase.build()</code> adds <code class="font-mono text-[11px] text-amber">Warning: NO_MARKETING_BINDING</code> to the envelope. The simulation still runs — but the operator knows the binding is missing.
+        </p>
+      </section>
+
+      <!-- Template Composition -->
+      <section id="templates" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Composition Pattern" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">Template Composition and Fork</h2>
+        <p class="text-sm text-content-secondary leading-relaxed mb-4">
+          Templates are factories — they take parameters and return a <code class="font-mono text-[11px] text-accent">Builder</code>. The Builder holds props, not assembled instances. <code class="font-mono text-[11px] text-accent">fork()</code> merges props and returns a new Builder. Nothing is cloned.
+        </p>
+        <p class="text-sm text-content-secondary leading-relaxed mb-5">
+          Three models. One source of truth. Every fork re-validates from atoms up.
+        </p>
+
+        <div class="bg-[#0a0d11] border border-border-subtle rounded-md overflow-hidden">
+          <div class="flex items-center gap-2 px-4 py-2 border-b border-border-subtle bg-background-secondary">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#3a2020]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#3a3020]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#1a3020]"></span>
+            <span class="font-mono text-[10px] text-content-muted ml-2">scenario_fork.ts</span>
+          </div>
+          <div class="p-5 font-mono text-[11px] leading-[1.8] overflow-x-auto">
+            <span class="text-content-muted">// Base configuration</span>
+            <span class="block text-content-secondary">const baseConfig = RetailPoint.configure({'{'}</span>
+            <span class="block pl-4 text-content-secondary">name: <span class="text-green">"Coffee To Go — Base"</span>,</span>
+            <span class="block pl-4 text-content-secondary">menu: [</span>
+            <span class="block pl-8 text-content-secondary">{'{'} name: <span class="text-green">"Espresso"</span>, share: 0.65, price: 150, cost: 45 {'}'},</span>
+            <span class="block pl-8 text-content-secondary">{'{'} name: <span class="text-green">"Filter"</span>,   share: 0.10, price: 120, cost: 30 {'}'},</span>
+            <span class="block pl-8 text-content-secondary">{'{'} name: <span class="text-green">"Food"</span>,     share: 0.25, price: 200, cost: 80 {'}'},</span>
+            <span class="block pl-4 text-content-secondary">],</span>
+            <span class="block pl-4 text-content-secondary">staff: [{'{'} role: <span class="text-green">"Barista"</span>, count: 2, salary: 45000 {'}'}],</span>
+            <span class="block pl-4 text-content-secondary">location: {'{'} rent: 65000, utilities: 12000 {'}'},</span>
+            <span class="block pl-4 text-content-secondary">taxRegime: new USN6Strategy(),</span>
+            <span class="block text-content-secondary">{'}'});</span>
+            <span class="block mt-2 text-content-secondary">const {'{'} value: baseModel, warnings {'}'} = baseConfig.build();</span>
+            <span class="block mt-2 text-content-muted">// Scenario fork — new Builder from merged props, no cloning</span>
+            <span class="block text-content-secondary">const optimistic = baseConfig.fork({'{'}</span>
+            <span class="block pl-4 text-content-secondary">menu: baseConfig.props.menu.map(sku => ({'{'} ...sku, price: sku.price * 1.15 {'}'})),</span>
+            <span class="block text-content-secondary">{'}'}).build();</span>
+            <span class="block mt-1 text-content-secondary">const pessimistic = baseConfig.fork({'{'}</span>
+            <span class="block pl-4 text-content-secondary">menu: baseConfig.props.menu.map(sku => ({'{'} ...sku, price: sku.price * 0.85 {'}'})),</span>
+            <span class="block text-content-secondary">{'}'}).build();</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Demo -->
+      <section id="demo" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Demo" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">Coffee To Go — 3 Scenarios</h2>
+        <p class="text-sm text-content-secondary leading-relaxed mb-4">
+          The <code class="font-mono text-[11px] text-accent">coffeeToGo.ts</code> page demonstrates the full stack: template composition, SKU-mix revenue, 24-month simulation, and scenario analysis. All three scenarios built via <code class="font-mono text-[11px] text-accent">.fork()</code> from a single base configuration.
+        </p>
+
+        <div class="p-5 bg-background-secondary border border-border-subtle rounded-md mb-6">
+          <div class="font-mono text-[9px] text-content-muted tracking-[0.1em] uppercase mb-3">Input Hypotheses (LLM-generated, verifiable)</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[13px] text-content-secondary leading-relaxed">
+            <div>Daily traffic: <span class="text-content-primary">70 customers</span> · BENCHMARK · MEDIUM</div>
+            <div>Conversion: <span class="text-content-primary">0.85</span> · BENCHMARK · MEDIUM</div>
+            <div>SKU mix: <span class="text-content-primary">Espresso 65% / Filter 10% / Food 25%</span></div>
+            <div>Staff: <span class="text-content-primary">2 baristas at 45,000₽/month</span></div>
+            <div>Fixed expenses: <span class="text-content-primary">Rent 65,000₽ · Utilities 12,000₽</span></div>
+            <div>CAPEX: <span class="text-content-primary">985,000₽</span> (equipment + fit-out)</div>
+            <div>Tax regime: <span class="text-content-primary">USN 6%</span></div>
+            <div>Simulation: <span class="text-content-primary">24 months</span></div>
+          </div>
+        </div>
+
+        <!-- Simulation results table -->
+        <h3 class="text-sm font-medium text-content-primary mb-3 mt-6">BASE scenario — 24-month simulation</h3>
+        <div class="border border-border-subtle rounded-md overflow-hidden mb-6">
+          <table class="w-full border-collapse text-[13px]">
+            <thead>
+              <tr class="border-b border-border-default">
+                <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-left font-normal">Month</th>
+                <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-right font-normal">Orders</th>
+                <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-right font-normal">Revenue</th>
+                <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-right font-normal">Expenses</th>
+                <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-right font-normal">Net</th>
+                <th class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase px-4 py-2.5 text-right font-normal">Cumulative</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-border-subtle"><td class="px-4 py-2.5 font-mono text-content-muted">1</td><td class="px-4 py-2.5 text-right text-content-secondary">1,488</td><td class="px-4 py-2.5 text-right text-content-secondary">162,900₽</td><td class="px-4 py-2.5 text-right text-content-secondary">198,000₽</td><td class="px-4 py-2.5 text-right text-red font-mono">−35,100₽</td><td class="px-4 py-2.5 text-right text-red font-mono">−35,100₽</td></tr>
+              <tr class="border-b border-border-subtle"><td class="px-4 py-2.5 font-mono text-content-muted">6</td><td class="px-4 py-2.5 text-right text-content-secondary">1,785</td><td class="px-4 py-2.5 text-right text-content-secondary">210,000₽</td><td class="px-4 py-2.5 text-right text-content-secondary">178,000₽</td><td class="px-4 py-2.5 text-right text-green font-mono">+32,000₽</td><td class="px-4 py-2.5 text-right text-red font-mono">−62,400₽</td></tr>
+              <tr class="border-b border-border-subtle"><td class="px-4 py-2.5 font-mono text-content-muted">12</td><td class="px-4 py-2.5 text-right text-content-secondary">1,890</td><td class="px-4 py-2.5 text-right text-content-secondary">224,700₽</td><td class="px-4 py-2.5 text-right text-content-secondary">183,000₽</td><td class="px-4 py-2.5 text-right text-green font-mono">+41,700₽</td><td class="px-4 py-2.5 text-right text-green font-mono">+89,700₽</td></tr>
+              <tr><td class="px-4 py-2.5 font-mono text-content-muted">24</td><td class="px-4 py-2.5 text-right text-content-secondary">1,890</td><td class="px-4 py-2.5 text-right text-content-secondary">224,700₽</td><td class="px-4 py-2.5 text-right text-content-secondary">185,000₽</td><td class="px-4 py-2.5 text-right text-green font-mono">+39,700₽</td><td class="px-4 py-2.5 text-right text-green font-mono">+462,900₽</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Solver output -->
+        <div class="bg-[#0a0d11] border border-border-subtle rounded-md overflow-hidden mb-6">
+          <div class="flex items-center gap-2 px-4 py-2 border-b border-border-subtle bg-background-secondary">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#3a2020]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#3a3020]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#1a3020]"></span>
+            <span class="font-mono text-[10px] text-content-muted ml-2">solver_output.log</span>
+          </div>
+          <div class="p-5 font-mono text-[11px] leading-[1.9] overflow-x-auto">
+            <span class="text-content-secondary">Minimum viable daily traffic: </span><span class="text-accent">54.2 customers</span>
+            <span class="block text-content-secondary">Current plan:                 </span><span class="text-content-primary">70.0 customers</span>
+            <span class="block text-content-secondary">Safety margin:                </span><span class="text-green">+29%</span>
+            <span class="block mt-2 text-content-muted">Below 54.2 → cash crisis inevitable given current expense structure.</span>
+          </div>
+        </div>
+
+        <!-- Scenario comparison -->
+        <h3 class="text-sm font-medium text-content-primary mb-3 mt-7">Scenario Comparison</h3>
+        <BenchmarkTable rows={demoRows} />
+      </section>
+
+      <!-- ADR-001 -->
+      <section id="adr" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Architecture Decision Record" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">ADR-001: The Atomic Design Decision</h2>
+        <p class="text-sm text-content-secondary leading-relaxed mb-4">
+          The v1 architecture had three layers: Primitives → Building Blocks → Engine. Functional, but without a reuse mechanism. Every simulation was written from scratch. Copy-paste was the only composition pattern.
+        </p>
+        <p class="text-sm text-content-secondary leading-relaxed mb-4">
+          The v2 decision: five-level Atomic Design, borrowed from UI component architecture and applied to financial modeling. The mapping is structurally sound because financial modeling is fractal: rates compose into expenses, expenses compose into pools, pools compose into phases, phases compose into business models. Each level is self-contained and self-validating.
+        </p>
+        <p class="text-sm text-content-secondary leading-relaxed mb-6">
+          Four open questions were resolved before v2 implementation:
+        </p>
+
+        <div class="flex flex-col gap-px bg-border-subtle border border-border-subtle rounded-md overflow-hidden">
+          {decisions.map(d => <DecisionCard {...d} />)}
+        </div>
+      </section>
+
+      <!-- Lessons -->
+      <section id="lessons" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="What I Learned" />
+        <div class="flex flex-col gap-px bg-border-subtle border border-border-subtle rounded-md overflow-hidden">
+          {lessons.map(l => <LessonItem {...l} />)}
+        </div>
+      </section>
+
+      <!-- Replicability -->
+      <section id="replicability" class="py-12 border-b border-border-subtle">
+        <SectionLabel text="Replicability" />
+        <h2 class="text-lg font-medium text-content-primary mb-4 leading-snug">The engine is the transferable asset</h2>
+        <p class="text-sm text-content-secondary leading-relaxed mb-6">
+          The SDK primitives have no domain knowledge. <code class="font-mono text-[11px] text-accent">Driver.valueForMonth()</code> returns a number — it does not know what "coffee" is. <code class="font-mono text-[11px] text-accent">ExpensePool</code> sums items — it does not know what "rent" is. <code class="font-mono text-[11px] text-accent">Solver.findMinimum()</code> runs binary search — it does not know what "breakeven" means. The difference between a coffee shop and any of these use cases is not the engine. It is the model. The engine is already built.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-px bg-border-subtle border border-border-subtle rounded-md overflow-hidden mb-6">
+          {replicability.map(r => <ReplicateItem {...r} />)}
+        </div>
+        <div class="p-5 bg-background-secondary border border-border-subtle rounded-md">
+          <div class="font-mono text-[9px] text-content-muted tracking-[0.08em] uppercase mb-2">Engine Properties</div>
+          <div class="font-mono text-xs text-content-secondary leading-8">
+            <code class="text-accent">Driver</code> → returns a number, agnostic to what it drives<br/>
+            <code class="text-accent">ExpensePool</code> → sums Fixed, Variable, Percent items, agnostic to expense type<br/>
+            <code class="text-accent">Solver</code> → binary search on driver until totalProfit &gt; 0<br/>
+            <code class="text-accent">CapacityPool</code> → validates demandHours ≤ supplyHours, agnostic to domain<br/>
+            <code class="text-accent">ReasoningTrace</code> → records every calculation step, produces auditable output
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section class="py-12">
+        <div class="p-8 bg-background-secondary border border-border-subtle rounded-md flex flex-col md:flex-row items-start justify-between gap-8">
+          <div>
+            <div class="font-mono text-[9px] text-content-muted tracking-[0.1em] uppercase mb-2">This is one of several projects I'm documenting</div>
+            <div class="text-sm text-content-secondary max-w-[480px] leading-relaxed">Available to walk through the architecture, the tradeoffs, and what this constraint-driven pattern could look like applied to your domain.</div>
+          </div>
+          <div class="flex flex-col gap-2 flex-shrink-0">
+            <a href="#" class="font-mono text-[11px] text-accent border border-accent-muted px-5 py-2.5 rounded text-center transition-colors hover:bg-accent-muted">Get in touch →</a>
+            <a href="/" class="font-mono text-[11px] text-content-muted border border-border-default px-5 py-2.5 rounded text-center transition-colors hover:bg-background-tertiary">← Back to Systems</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="py-10 border-t border-border-subtle flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="font-mono text-[10px] text-content-muted">Eugene Kaizin · CS-002 · 2026</div>
+        <div class="flex gap-6">
+          <a href="#" class="font-mono text-[10px] text-content-muted hover:text-accent transition-colors">GitHub</a>
+          <a href="#" class="font-mono text-[10px] text-content-muted hover:text-accent transition-colors">Telegram</a>
+          <a href="#" class="font-mono text-[10px] text-content-muted hover:text-accent transition-colors">Contact</a>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // TOC active state on scroll
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const sections = document.querySelectorAll('section[id]');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          tocLinks.forEach(a => {
+            a.classList.remove('text-accent', 'bg-background-secondary');
+            a.classList.add('text-content-muted');
+          });
+          const active = document.querySelector(`.toc-link[href="#${entry.target.id}"]`);
+          if (active) {
+            active.classList.add('text-accent', 'bg-background-secondary');
+            active.classList.remove('text-content-muted');
+          }
+        }
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+  </script>
+</Layout>
